@@ -1,17 +1,48 @@
 {
     "curly": [
-        { "nom": "Prime Patrimonia", "url": "https://discordapp.com/api/webhooks/1524339415567171664/jI_sV3e13fIWATIFPzIc4qMqI3gBZarIi_vXe2lUSYWj8UFothtVGR49NaaM7b1QYzcx" },
-        { "nom": "FDG Patrimonia", "url": "https://discordapp.com/api/webhooks/1524356475227607070/s-XpdzgUyTYYCAdiydlJ585Qu5NK8N22F3vVcH-GJR8B956n1Sg9IPBIjuDqfnyNn3Nr" },
-        { "nom": "Prime Apero-folie", "url": "https://discordapp.com/api/webhooks/1524304609924091935/L2apDhakQQpGr3Viaa5U8ukGntecdsaedXpLt18S8wz468v9kaO6CBr9UD45p__7CpZJ" },
-        { "nom": "FDG Apero-folie", "url": "https://discordapp.com/api/webhooks/1524412314210795632/RiLe38ht3bGTNU876DziXPrZzyS8Ol6KAg1LCmD6rmHdIWWz7IsI_bKFtM5kXHjRsDl_" },
-        { "nom": "Prime Apero-partie", "url": "https://discordapp.com/api/webhooks/1524412541604728872/N8_K1C05cer-dakuFs2HjL2Zntj62uJqrLdHGDjLeGvwXzUAxQePS4e3HvX5_oFqtQdg" },
-        { "nom": "FDG Apero-partie", "url": "https://discordapp.com/api/webhooks/1524413015359881340/BYsugD9oCYqm5OM2yasbmMC9u2X66AV8egQyoU31QFI9dxEBKK2dqseF4oyiEHQnuR9x" }
+        {
+            "nom": "Prime Patrimonia",
+            "url": "https://discordapp.com/api/webhooks/1524339415567171664/jI_sV3e13fIWATIFPzIc4qMqI3gBZarIi_vXe2lUSYWj8UFothtVGR49NaaM7b1QYzcx"
+        },
+        {
+            "nom": "FDG Patrimonia",
+            "url": "https://discordapp.com/api/webhooks/1524356475227607070/s-XpdzgUyTYYCAdiydlJ585Qu5NK8N22F3vVcH-GJR8B956n1Sg9IPBIjuDqfnyNn3Nr"
+        },
+        {
+            "nom": "Prime Apero-folie",
+            "url": "https://discordapp.com/api/webhooks/1524304609924091935/L2apDhakQQpGr3Viaa5U8ukGntecdsaedXpLt18S8wz468v9kaO6CBr9UD45p__7CpZJ"
+        },
+        {
+            "nom": "FDG Apero-folie",
+            "url": "https://discordapp.com/api/webhooks/1524412314210795632/RiLe38ht3bGTNU876DziXPrZzyS8Ol6KAg1LCmD6rmHdIWWz7IsI_bKFtM5kXHjRsDl_"
+        },
+        {
+            "nom": "Prime Apero-partie",
+            "url": "https://discordapp.com/api/webhooks/1524412541604728872/N8_K1C05cer-dakuFs2HjL2Zntj62uJqrLdHGDjLeGvwXzUAxQePS4e3HvX5_oFqtQdg"
+        },
+        {
+            "nom": "FDG Apero-partie",
+            "url": "https://discordapp.com/api/webhooks/1524413015359881340/BYsugD9oCYqm5OM2yasbmMC9u2X66AV8egQyoU31QFI9dxEBKK2dqseF4oyiEHQnuR9x"
+        },
+        {
+            "nom": "Prime test",
+            "url": "https://discord.com/api/webhooks/dkdxud"
+        }
     ],
     "creedex77": [
-        { "nom": "Prime elchacha", "url": "https://discordapp.com/api/webhooks/1524372935685705800/zaHhrNAdZOcYbihXVDwwzN47lMxi_aMlDWNO6U0CAIjMmk_THMRVIzyE88pmqGIvhgBg" }
+        {
+            "nom": "Prime elchacha",
+            "url": "https://discordapp.com/api/webhooks/1524372935685705800/zaHhrNAdZOcYbihXVDwwzN47lMxi_aMlDWNO6U0CAIjMmk_THMRVIzyE88pmqGIvhgBg"
+        }
     ],
     "junior": [
-        { "nom": "Prime capital", "url": "https://discord.com/api/webhooks/1518563990316515519/jKKxKGacgy0vuHsZ2wrdVzJbHMwbcy_eMD489TXvXnIv0Az2ku8OXLmpxyl5PRePTfdU" },
-        { "nom": "FDG capital", "url": "https://discord.com/api/webhooks/1524497137872801833/8IcbDYv8spI9YUX-AzSq8sNLKQjx74ijhM5n60e8MwH1lqAx40RjpSBoRme74-UwPjS-" }
+        {
+            "nom": "Prime capital",
+            "url": "https://discord.com/api/webhooks/1518563990316515519/jKKxKGacgy0vuHsZ2wrdVzJbHMwbcy_eMD489TXvXnIv0Az2ku8OXLmpxyl5PRePTfdU"
+        },
+        {
+            "nom": "FDG capital",
+            "url": "https://discord.com/api/webhooks/1524497137872801833/8IcbDYv8spI9YUX-AzSq8sNLKQjx74ijhM5n60e8MwH1lqAx40RjpSBoRme74-UwPjS-"
+        }
     ]
 }
