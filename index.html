@@ -55,7 +55,8 @@
             height: 18px;
             cursor: pointer;
         }
-        input[type="text"], input[type="text"], select, textarea {
+        /* Correction de l'alignement ici : Ciblage propre de tous les inputs text, selects et textareas */
+        input[type="text"], select, textarea {
             width: 100%;
             padding: 12px;
             background-color: #202225;
@@ -125,7 +126,7 @@
     <h1>📊 Analyseur Global (Primes & Frais)</h1>
     
     <label for="codeAcces">🔑 Code d'accès Webhook :</label>
-    <input type="password" id="codeAcces" placeholder="Entrez votre code secret (ex: curly)" oninput="detecterCode()">
+    <input type="text" id="codeAcces" placeholder="Entrez votre code secret (ex: curly)" oninput="detecterCode()">
 
     <div id="zoneSalons" class="hidden">
         <label for="selectWebhookPrimes">📁 Salon de destination pour les Primes :</label>
@@ -162,17 +163,17 @@ const DICTIONNAIRE_WEBHOOKS = {
     "curly": [
         { nom: "Prime Patrimonia", url: "https://discordapp.com/api/webhooks/1524339415567171664/jI_sV3e13fIWATIFPzIc4qMqI3gBZarIi_vXe2lUSYWj8UFothtVGR49NaaM7b1QYzcx" },
         { nom: "FDG Patrimonia", url: "https://discordapp.com/api/webhooks/1524356475227607070/s-XpdzgUyTYYCAdiydlJ585Qu5NK8N22F3vVcH-GJR8B956n1Sg9IPBIjuDqfnyNn3Nr" },
-		{ nom: "Prime Apero-folie", url: "https://discordapp.com/api/webhooks/1524304609924091935/L2apDhakQQpGr3Viaa5U8ukGntecdsaedXpLt18S8wz468v9kaO6CBr9UD45p__7CpZJ" },
+        { nom: "Prime Apero-folie", url: "https://discordapp.com/api/webhooks/1524304609924091935/L2apDhakQQpGr3Viaa5U8ukGntecdsaedXpLt18S8wz468v9kaO6CBr9UD45p__7CpZJ" },
         { nom: "FDG Apero-folie", url: "https://discordapp.com/api/webhooks/1524412314210795632/RiLe38ht3bGTNU876DziXPrZzyS8Ol6KAg1LCmD6rmHdIWWz7IsI_bKFtM5kXHjRsDl_" },
-		{ nom: "Prime Apero-partie", url: "https://discordapp.com/api/webhooks/1524412541604728872/N8_K1C05cer-dakuFs2HjL2Zntj62uJqrLdHGDjLeGvwXzUAxQePS4e3HvX5_oFqtQdg" },
+        { nom: "Prime Apero-partie", url: "https://discordapp.com/api/webhooks/1524412541604728872/N8_K1C05cer-dakuFs2HjL2Zntj62uJqrLdHGDjLeGvwXzUAxQePS4e3HvX5_oFqtQdg" },
         { nom: "FDG Apero-partie", url: "https://discordapp.com/api/webhooks/1524413015359881340/BYsugD9oCYqm5OM2yasbmMC9u2X66AV8egQyoU31QFI9dxEBKK2dqseF4oyiEHQnuR9x" }
     ],
-	"creedex77": [
+    "creedex77": [
         { nom: "Prime elchacha", url: "https://discordapp.com/api/webhooks/1524372935685705800/zaHhrNAdZOcYbihXVDwwzN47lMxi_aMlDWNO6U0CAIjMmk_THMRVIzyE88pmqGIvhgBg" }
     ],
-	"junior": [
+    "junior": [
         { nom: "Prime capital", url: "https://discord.com/api/webhooks/1518563990316515519/jKKxKGacgy0vuHsZ2wrdVzJbHMwbcy_eMD489TXvXnIv0Az2ku8OXLmpxyl5PRePTfdU" },
-		{ nom: "FDG capital", url: "https://discord.com/api/webhooks/1524497137872801833/8IcbDYv8spI9YUX-AzSq8sNLKQjx74ijhM5n60e8MwH1lqAx40RjpSBoRme74-UwPjS-" }
+        { nom: "FDG capital", url: "https://discord.com/api/webhooks/1524497137872801833/8IcbDYv8spI9YUX-AzSq8sNLKQjx74ijhM5n60e8MwH1lqAx40RjpSBoRme74-UwPjS-" }
     ]
 };
 
@@ -380,11 +381,10 @@ async function traiterEtEnvoyerPrimes() {
             } else messageActuel += ligneFormat;
         }
 
-        // Ajout de la somme globale optimisée à la fin du rapport
         const ligneTotal = `\n⚙️ **Somme totale des primes versées :** \`${formaterGrandNombre(sommeTotalePrimes.toString())} 💰\``;
         if ((messageActuel + ligneTotal).length > 1950) {
             messagesAEnvoyer.push(messageActuel);
-            messageActuel = totalLigne;
+            messageActuel = ligneTotal;
         } else {
             messageActuel += ligneTotal;
         }
@@ -469,11 +469,10 @@ async function traiterEtEnvoyerFrais() {
             }
         }
 
-        // Ajout de la somme globale optimisée à la fin du rapport
         const ligneTotal = `\n📊 **Somme totale des frais de gestion :** \`${formaterGrandNombre(sommeTotaleFrais.toString())} 💸\``;
         if ((messageActuel + ligneTotal).length > 1950) {
             messagesAEnvoyer.push(messageActuel);
-            messageActuel = totalLigne;
+            messageActuel = ligneTotal;
         } else {
             messageActuel += ligneTotal;
         }
