@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyseur de Primes Discord</title>
+    <title>Analyseur de Primes & Frais Discord</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -27,6 +27,13 @@
             text-align: center;
             margin-bottom: 25px;
             font-size: 24px;
+        }
+        h2 {
+            color: #fff;
+            border-bottom: 2px solid #5865f2;
+            padding-bottom: 8px;
+            margin-top: 30px;
+            font-size: 18px;
         }
         label {
             display: block;
@@ -66,7 +73,7 @@
         }
         textarea {
             resize: vertical;
-            min-height: 200px;
+            min-height: 150px;
         }
         input:focus, select:focus, textarea:focus {
             outline: none;
@@ -79,10 +86,17 @@
             color: #fff;
             border: none;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s;
+            margin-bottom: 10px;
+        }
+        button.btn-frais {
+            background-color: #248046;
+        }
+        button.btn-frais:hover {
+            background-color: #1a6535;
         }
         button:hover {
             background-color: #4752c4;
@@ -108,28 +122,36 @@
 <body>
 
 <div class="container">
-    <h1>📊 Analyseur & Envoi de Primes</h1>
+    <h1>📊 Analyseur Global (Primes & Frais)</h1>
     
     <label for="codeAcces">🔑 Code d'accès Webhook :</label>
-    <input type="password" id="codeAcces" placeholder="Entrez votre code secret (ex: 1234)" oninput="detecterCode()">
+    <input type="password" id="codeAcces" placeholder="Entrez votre code secret (ex: curly)" oninput="detecterCode()">
 
     <div id="zoneSalons" class="hidden">
-        <label for="selectWebhook">📁 Salon de destination :</label>
-        <select id="selectWebhook"></select>
-    </div>
+        <label for="selectWebhookPrimes">📁 Salon de destination pour les Primes :</label>
+        <select id="selectWebhookPrimes"></select>
 
-    <label for="primeMaxBase">💰 Prime Max par poste (ex: 5M, 10G, 5000000) :</label>
-    <input type="text" id="primeMaxBase" placeholder="Laissez vide pour désactiver le contrôle">
+        <label for="selectWebhookFrais">📁 Salon de destination pour les Frais :</label>
+        <select id="selectWebhookFrais"></select>
+    </div>
 
     <label class="checkbox-container">
         <input type="checkbox" id="exclureZeros" checked>
-        Masquer les joueurs qui ont 0 de prime
+        Masquer les valeurs à 0 (valable pour primes et frais)
     </label>
 
-    <label for="grosTexte">📝 Coller le tableau des données ici :</label>
-    <textarea id="grosTexte" placeholder="Filiale    Poste    Directeur    Prime Max    Prime..."></textarea>
+    <h2>Section 1 : Primes Directeurs</h2>
+    <label for="primeMaxBase">💰 Prime Max par poste (ex: 5M, 10G, 5000000) :</label>
+    <input type="text" id="primeMaxBase" placeholder="Laissez vide pour désactiver le contrôle">
 
-    <button id="btnEnvoyer" onclick="traiterEtEnvoyer()">🚀 Analyser et Envoyer sur Discord</button>
+    <label for="grosTexte">📝 Coller le tableau des Primes ici :</label>
+    <textarea id="grosTexte" placeholder="Filiale    Poste    Directeur    Prime Max    Prime..."></textarea>
+    <button id="btnEnvoyerPrimes" onclick="traiterEtEnvoyerPrimes()">🚀 Analyser et Envoyer les Primes</button>
+
+    <h2>Section 2 : Frais de Gestion Filiales</h2>
+    <label for="texteFrais">🏢 Coller le tableau des Frais de Gestion ici :</label>
+    <textarea id="texteFrais" placeholder="Filiale    Frais de gestion&#10;Patrimonia-E.C.T    0&#10;Patrimonia-Isabelle62    656300000000000000..."></textarea>
+    <button id="btnEnvoyerFrais" class="btn-frais" onclick="traiterEtEnvoyerFrais()">🚀 Analyser et Envoyer les Frais</button>
 
     <div id="statusBox" class="status"></div>
 </div>
@@ -138,91 +160,102 @@
 // --- CONFIGURATION DES CODES ET DES OPTIONS DE WEBHOOKS ---
 const DICTIONNAIRE_WEBHOOKS = {
     "curly": [
-        { nom: "Prime Patrimonia", url: "https://discordapp.com/api/webhooks/1524339415567171664/jI_sV3e13fIWATIFPzIc4qMqI3gBZarIi_vXe2lUSYWj8UFothtVGR49NaaM7b1QYzcx" }
-    ],
-    "lion": [
-        { nom: "🔒 Zone Staff", url: "https://discord.com/api/webhooks/VALEUR_EXEMPLE_B1" },
-        { nom: "📈 Logs Système", url: "https://discord.com/api/webhooks/VALEUR_EXEMPLE_B2" },
-        { nom: "💬 Discussion", url: "https://discord.com/api/webhooks/VALEUR_EXEMPLE_B3" }
+        { nom: "Prime Patrimonia", url: "https://discordapp.com/api/webhooks/1524339415567171664/jI_sV3e13fIWATIFPzIc4qMqI3gBZarIi_vXe2lUSYWj8UFothtVGR49NaaM7b1QYzcx" },
+        { nom: "FDG Patrimonia", url: "https://discordapp.com/api/webhooks/1524356475227607070/s-XpdzgUyTYYCAdiydlJ585Qu5NK8N22F3vVcH-GJR8B956n1Sg9IPBIjuDqfnyNn3Nr" }
     ]
 };
 
-// Liste officielle des unités utilisées dans ton script avec leur puissance de 10
 const CONFIG_UNITES = [
-    { symbole: 'D', taille: 45 },
-    { symbole: 'N', taille: 42 },
-    { symbole: 'X', taille: 39 },
-    { symbole: 'S', taille: 36 },
-    { symbole: 'U', taille: 33 },
-    { symbole: 'Q', taille: 30 },
-    { symbole: 'R', taille: 27 },
-    { symbole: 'Y', taille: 24 },
-    { symbole: 'Z', taille: 21 },
-    { symbole: 'E', taille: 18 },
-    { symbole: 'P', taille: 15 },
-    { symbole: 'T', taille: 12 },
-    { symbole: 'G', taille: 9 },
-    { symbole: 'M', taille: 6 } // Ajout de M pour millions au cas où
+    { symbole: 'D', taille: 45 }, { symbole: 'N', taille: 42 }, { symbole: 'X', taille: 39 },
+    { symbole: 'S', taille: 36 }, { symbole: 'U', taille: 33 }, { symbole: 'Q', taille: 30 },
+    { symbole: 'R', taille: 27 }, { symbole: 'Y', taille: 24 }, { symbole: 'Z', taille: 21 },
+    { symbole: 'E', taille: 18 }, { symbole: 'P', taille: 15 }, { symbole: 'T', taille: 12 },
+    { symbole: 'G', taille: 9 },  { symbole: 'M', taille: 6 }
 ];
 
-// Convertit une chaîne avec unité (ex: "1,5G" ou "500M") en BigInt pur
 function convertirEnBigInt(chaine) {
     let nettoye = chaine.trim().toUpperCase().replace(/,/g, '.');
     if (!nettoye || nettoye === '0' || nettoye === '-' || nettoye === '.') return 0n;
 
-    // Chercher si la chaîne se termine par une unité connue
     for (const u of CONFIG_UNITES) {
         if (nettoye.endsWith(u.symbole)) {
             let valeurNum = nettoye.slice(0, -1).trim();
             let floatValeur = parseFloat(valeurNum);
             if (isNaN(floatValeur)) return 0n;
 
-            // Utilisation de la notation scientifique pour gérer les décimales proprement avec BigInt
             let shift = u.taille;
             if (valeurNum.includes('.')) {
                 let decimales = valeurNum.split('.')[1].length;
                 floatValeur = floatValeur * Math.pow(10, decimales);
                 shift -= decimales;
             }
-            
             if (shift < 0) return BigInt(Math.round(parseFloat(valeurNum) * Math.pow(10, u.taille)));
             return BigInt(Math.round(floatValeur)) * (10n ** BigInt(shift));
         }
     }
-
-    // Si aucune unité n'est trouvée, on nettoie tout sauf les chiffres
     let chiffresSeuls = nettoye.replace(/[^0-9]/g, '');
     return chiffresSeuls ? BigInt(chiffresSeuls) : 0n;
 }
 
-// Fonction déclenchée en temps réel quand on écrit le code
 function detecterCode() {
     const code = document.getElementById("codeAcces").value.trim();
     const zoneSalons = document.getElementById("zoneSalons");
-    const selectWebhook = document.getElementById("selectWebhook");
+    const selectWebhookPrimes = document.getElementById("selectWebhookPrimes");
+    const selectWebhookFrais = document.getElementById("selectWebhookFrais");
     
     if (DICTIONNAIRE_WEBHOOKS[code]) {
-        selectWebhook.innerHTML = ""; 
+        selectWebhookPrimes.innerHTML = ""; 
+        selectWebhookFrais.innerHTML = ""; 
         
+        let aDesPrimes = false;
+        let aDesFrais = false;
+
         DICTIONNAIRE_WEBHOOKS[code].forEach((salon) => {
-            const opt = document.createElement("option");
-            opt.value = salon.url;
-            opt.textContent = salon.nom;
-            selectWebhook.appendChild(opt);
+            const nomMinuscule = salon.nom.toLowerCase();
+            
+            if (nomMinuscule.startsWith("prime")) {
+                const opt = document.createElement("option");
+                opt.value = salon.url;
+                opt.textContent = salon.nom;
+                selectWebhookPrimes.appendChild(opt);
+                aDesPrimes = true;
+            }
+            
+            if (nomMinuscule.startsWith("fdg") || nomMinuscule.startsWith("frais")) {
+                const opt = document.createElement("option");
+                opt.value = salon.url;
+                opt.textContent = salon.nom;
+                selectWebhookFrais.appendChild(opt);
+                aDesFrais = true;
+            }
         });
+
+        if (!aDesPrimes || !aDesFrais) {
+            DICTIONNAIRE_WEBHOOKS[code].forEach((salon) => {
+                if (!aDesPrimes) {
+                    const opt = document.createElement("option");
+                    opt.value = salon.url; opt.textContent = salon.nom;
+                    selectWebhookPrimes.appendChild(opt);
+                }
+                if (!aDesFrais) {
+                    const opt = document.createElement("option");
+                    opt.value = salon.url; opt.textContent = salon.nom;
+                    selectWebhookFrais.appendChild(opt);
+                }
+            });
+        }
         
         zoneSalons.classList.remove("hidden"); 
     } else {
         zoneSalons.classList.add("hidden"); 
-        selectWebhook.innerHTML = "";
+        selectWebhookPrimes.innerHTML = "";
+        selectWebhookFrais.innerHTML = "";
     }
 }
 
-// Fonction pour abréger les très grands nombres de manière lisible avec décimales
 function formaterGrandNombre(chaineNombre) {
     const nette = chaineNombre.replace(/[^0-9]/g, '');
     if (!nette || nette === '0') return "Aucune (0)";
-
     const longueur = nette.length;
 
     const unitesFormat = [
@@ -230,7 +263,7 @@ function formaterGrandNombre(chaineNombre) {
         { symbole: 'S', taille: 37 }, { symbole: 'U', taille: 34 }, { symbole: 'Q', taille: 31 },
         { symbole: 'R', taille: 28 }, { symbole: 'Y', taille: 25 }, { symbole: 'Z', taille: 22 },
         { symbole: 'E', taille: 19 }, { symbole: 'P', taille: 16 }, { symbole: 'T', taille: 13 },
-        { symbole: 'G', taille: 10 }
+        { symbole: 'G', taille: 10 }, { symbole: 'M', taille: 7 }
     ];
 
     for (const u of unitesFormat) {
@@ -238,82 +271,65 @@ function formaterGrandNombre(chaineNombre) {
             const rangSlicing = longueur - u.taille + 1;
             const partieEntiere = nette.substring(0, rangSlicing);
             const partieDecimale = nette.substring(rangSlicing, rangSlicing + 2);
-            
-            if (partieDecimale === "00") {
-                return `${partieEntiere} ${u.symbole}`;
-            }
+            if (partieDecimale === "00") return `${partieEntiere} ${u.symbole}`;
             return `${partieEntiere},${partieDecimale} ${u.symbole}`;
         }
     }
-
     return BigInt(nette).toLocaleString('fr-FR');
 }
 
-async function traiterEtEnvoyer() {
-    const selectWebhook = document.getElementById("selectWebhook");
+// --- LOGIQUE POUR LES PRIMES ---
+async function traiterEtEnvoyerPrimes() {
+    const selectWebhookPrimes = document.getElementById("selectWebhookPrimes");
     const codeAcces = document.getElementById("codeAcces").value.trim();
     const grosTexte = document.getElementById("grosTexte").value.trim();
     const primeMaxSaisie = document.getElementById("primeMaxBase").value.trim();
     const exclureZeros = document.getElementById("exclureZeros").checked;
-    const btn = document.getElementById("btnEnvoyer");
-    const statusBox = document.getElementById("statusBox");
+    const btn = document.getElementById("btnEnvoyerPrimes");
 
     let webhookUrl = "";
-    if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces] && selectWebhook.value) {
-        webhookUrl = selectWebhook.value;
+    if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces] && selectWebhookPrimes.value) {
+        webhookUrl = selectWebhookPrimes.value;
     } else {
-        afficherStatus("❌ Veuillez saisir un code d'accès valide pour déverrouiller un salon de destination.", "error");
+        afficherStatus("❌ Veuillez saisir un code d'accès valide.", "error");
         return;
     }
 
     if (!grosTexte) {
-        afficherStatus("❌ Veuillez coller du texte à analyser.", "error");
+        afficherStatus("❌ Veuillez coller le tableau des primes.", "error");
         return;
     }
 
-    // Traitement de la limite base (prend en charge les unités à la saisie)
     let limiteBase = convertirEnBigInt(primeMaxSaisie);
-
     btn.disabled = true;
-    afficherStatus("⏳ Analyse en cours...", "");
-    statusBox.style.backgroundColor = "#72767d";
+    afficherStatus("⏳ Analyse des primes...", "");
 
     try {
         const lines = grosTexte.split("\n");
-        
         const primesCumulees = new Map();
         const occurrencesJoueurs = new Map();
+        let sommeTotalePrimes = 0n;
 
-        // Étape 1 : Analyse et cumul
         for (let i = 1; i < lines.length; i++) {
             let ligne = lines[i].trim();
             if (!ligne) continue;
-
             ligne = ligne.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, " ");
-
             const morceaux = ligne.split(/\s+/).filter(m => m.length > 0); 
             if (morceaux.length < 5) continue;
 
             let prime = morceaux[morceaux.length - 1]; 
-
             let indexDirecteur = -1;
             for (let j = 0; j < morceaux.length; j++) {
-                if (morceaux[j] === "Général" || morceaux[j] === "PDG" || morceaux[j] === "Directeur") {
-                    indexDirecteur = j + 1;
-                }
+                if (morceaux[j] === "Général" || morceaux[j] === "PDG" || morceaux[j] === "Directeur") indexDirecteur = j + 1;
             }
-
-            if (indexDirecteur === -1 || indexDirecteur >= morceaux.length - 2) {
-                indexDirecteur = morceaux.length - 3;
-            }
+            if (indexDirecteur === -1 || indexDirecteur >= morceaux.length - 2) indexDirecteur = morceaux.length - 3;
 
             const finNom = morceaux.length - 2; 
-            const directeurMorceaux = morceaux.slice(indexDirecteur, finNom);
-            const directeur = directeurMorceaux.join(" ").trim();
-
+            const directeur = morceaux.slice(indexDirecteur, finNom).join(" ").trim();
             if (!directeur) continue;
 
             let valeurPrimeNumerique = convertirEnBigInt(prime);
+            sommeTotalePrimes += valeurPrimeNumerique;
 
             if (primesCumulees.has(directeur)) {
                 primesCumulees.set(directeur, primesCumulees.get(directeur) + valeurPrimeNumerique);
@@ -324,98 +340,163 @@ async function traiterEtEnvoyer() {
             }
         }
 
-        // Étape 2 : Vérification du plafond max
         if (limiteBase > 0n) {
             let erreursPlafond = [];
-
             for (const [directeur, totalPrime] of primesCumulees) {
                 const nbrOccurrences = BigInt(occurrencesJoueurs.get(directeur));
                 const limitePersonnalisee = limiteBase * nbrOccurrences;
-
                 if (totalPrime > limitePersonnalisee) {
-                    const totalFormate = formaterGrandNombre(totalPrime.toString());
-                    const limiteFormatee = formaterGrandNombre(limitePersonnalisee.toString());
-                    erreursPlafond.push(`⚠️ **${directeur}** dépasse le plafond ! \n   👉 Reçu : \`${totalFormate}\` | Max autorisé (x${nbrOccurrences}) : \`${limiteFormatee}\``);
+                    erreursPlafond.push(`⚠️ **${directeur}** dépasse ! Reçu : \`${formaterGrandNombre(totalPrime.toString())}\` | Max : \`${formaterGrandNombre(limitePersonnalisee.toString())}\``);
                 }
             }
-
             if (erreursPlafond.length > 0) {
-                afficherStatus(`🛑 ENVOI BLOQUÉ - DÉPASSEMENT DE PRIME MAX :\n\n${erreursPlafond.join("\n\n")}\n\nVeuillez corriger le tableau avant de renvoyer.`, "error");
+                afficherStatus(`🛑 ENVOI BLOQUÉ - PLAFOND ATTEINT :\n\n${erreursPlafond.join("\n")}`, "error");
                 btn.disabled = false;
                 return;
             }
         }
 
-        // Étape 3 : Tri décroissant
-        let listeTriees = Array.from(primesCumulees.entries());
-        listeTriees.sort((a, b) => {
-            if (b[1] > a[1]) return 1;
-            if (b[1] < a[1]) return -1;
-            return 0;
-        });
-
-        // Étape 4 : Construction des messages Discord
+        let listeTriees = Array.from(primesCumulees.entries()).sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0));
         let messageActuel = "💰 **Rapport des Primes des Directeurs :**\n\n";
         const messagesAEnvoyer = [];
 
         for (const [directeur, totalPrime] of listeTriees) {
-            if (exclureZeros && totalPrime === 0n) {
+            if (exclureZeros && totalPrime === 0n) continue;
+            const ligneFormat = `👤 **${directeur}** ➔ \`${formaterGrandNombre(totalPrime.toString())} 💰\`\n`;
+            if ((messageActuel + ligneFormat).length > 1800) {
+                messagesAEnvoyer.push(messageActuel);
+                messageActuel = "🔄 **Suite du rapport :**\n\n" + ligneFormat;
+            } else messageActuel += ligneFormat;
+        }
+
+        // Ajout de la somme globale optimisée à la fin du rapport
+        const ligneTotal = `\n⚙️ **Somme totale des primes versées :** \`${formaterGrandNombre(sommeTotalePrimes.toString())} 💰\``;
+        if ((messageActuel + ligneTotal).length > 1950) {
+            messagesAEnvoyer.push(messageActuel);
+            messageActuel = totalLigne;
+        } else {
+            messageActuel += ligneTotal;
+        }
+
+        if (messageActuel && messageActuel.length > 45) messagesAEnvoyer.push(messageActuel);
+
+        await envoyerSurDiscord(webhookUrl, messagesAEnvoyer, "Gestionnaire des Primes");
+        afficherStatus("✅ Primes envoyées avec succès !", "success");
+        document.getElementById("grosTexte").value = "";
+    } catch (e) {
+        afficherStatus(`❌ Erreur Primes : ${e.message}`, "error");
+    } finally { btn.disabled = false; }
+}
+
+// --- LOGIQUE POUR LES FRAIS DE GESTION ---
+async function traiterEtEnvoyerFrais() {
+    const selectWebhookFrais = document.getElementById("selectWebhookFrais");
+    const codeAcces = document.getElementById("codeAcces").value.trim();
+    const texteFrais = document.getElementById("texteFrais").value.trim();
+    const exclureZeros = document.getElementById("exclureZeros").checked;
+    const btn = document.getElementById("btnEnvoyerFrais");
+
+    let webhookUrl = "";
+    if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces] && selectWebhookFrais.value) {
+        webhookUrl = selectWebhookFrais.value;
+    } else {
+        afficherStatus("❌ Veuillez saisir un code d'accès valide.", "error");
+        return;
+    }
+
+    if (!texteFrais) {
+        afficherStatus("❌ Veuillez coller le tableau des Frais de Gestion.", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    afficherStatus("⏳ Analyse des frais de gestion...", "");
+
+    try {
+        const lines = texteFrais.split("\n");
+        const fraisParFiliale = new Map();
+        let sommeTotaleFrais = 0n;
+
+        for (let i = 1; i < lines.length; i++) {
+            let ligne = lines[i].trim();
+            if (!ligne) continue;
+
+            const morceaux = ligne.split(/\s{2,}|\t/).filter(m => m.trim().length > 0);
+            if (morceaux.length < 2) {
+                const morceauxSecours = ligne.split(/\s+/);
+                if (morceauxSecours.length >= 2) {
+                    let montant = morceauxSecours[morceauxSecours.length - 1];
+                    let filiale = morceauxSecours.slice(0, morceauxSecours.length - 1).join(" ");
+                    let valeurFrais = convertirEnBigInt(montant);
+                    fraisParFiliale.set(filiale, valeurFrais);
+                    sommeTotaleFrais += valeurFrais;
+                }
                 continue;
             }
 
-            let primeFormatee = "";
-            if (totalPrime === 0n) {
-                primeFormatee = "Aucune (0)";
-            } else {
-                primeFormatee = formaterGrandNombre(totalPrime.toString());
-            }
+            let filiale = morceaux[0].trim();
+            let montantStr = morceaux[morceaux.length - 1].trim();
+            let valeurFrais = convertirEnBigInt(montantStr);
+            fraisParFiliale.set(filiale, valeurFrais);
+            sommeTotaleFrais += valeurFrais;
+        }
 
-            const ligneFormat = `👤 **${directeur}** ➔ \`${primeFormatee} 💰\`\n`;
+        let listeFraisTriees = Array.from(fraisParFiliale.entries()).sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0));
 
-            if ((messageActuel + ligneFormat).length > 1900) {
+        let messageActuel = "🏢 **Rapport des Frais de Gestion des Filiales :**\n\n";
+        const messagesAEnvoyer = [];
+
+        for (const [filiale, totalFrais] of listeFraisTriees) {
+            if (exclureZeros && totalFrais === 0n) continue;
+
+            const ligneFormat = `🏢 **${filiale}** ➔ \`${formaterGrandNombre(totalFrais.toString())} 💸\`\n`;
+            if ((messageActuel + ligneFormat).length > 1800) {
                 messagesAEnvoyer.push(messageActuel);
-                messageActuel = "🔄 **Suite du rapport :**\n\n" + ligneFormat;
+                messageActuel = "🔄 **Suite du rapport des frais :**\n\n" + ligneFormat;
             } else {
                 messageActuel += ligneFormat;
             }
         }
-        
-        if (messageActuel && messageActuel !== "💰 **Rapport des Primes des Directeurs :**\n\n" && messageActuel !== "🔄 **Suite du rapport :**\n\n") {
+
+        // Ajout de la somme globale optimisée à la fin du rapport
+        const ligneTotal = `\n📊 **Somme totale des frais de gestion :** \`${formaterGrandNombre(sommeTotaleFrais.toString())} 💸\``;
+        if ((messageActuel + ligneTotal).length > 1950) {
             messagesAEnvoyer.push(messageActuel);
+            messageActuel = totalLigne;
+        } else {
+            messageActuel += ligneTotal;
         }
 
-        if (messagesAEnvoyer.length === 0) {
-            afficherStatus("⚠️ Aucune donnée valide n'a pu être extraite ou tous les joueurs ont 0 de prime.", "error");
+        if (messageActuel && messageActuel.length > 55) messagesAEnvoyer.push(messageActuel);
+
+        if (messagesAEnvoyer.length === 0 || (messagesAEnvoyer.length === 1 && sommeTotaleFrais === 0n && exclureZeros)) {
+            afficherStatus("⚠️ Rien à envoyer (toutes les valeurs sont à 0 ou tableau vide).", "error");
             btn.disabled = false;
             return;
         }
 
-        // Étape 5 : Envoi vers Discord
-        afficherStatus("⏳ Envoi sur Discord...", "");
-        for (const msgContent of messagesAEnvoyer) {
-            const reponse = await fetch(webhookUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: "Gestionnaire des Primes",
-                    avatar_url: "https://i.imgur.com/AfFp7pu.png",
-                    content: msgContent
-                })
-            });
+        await envoyerSurDiscord(webhookUrl, messagesAEnvoyer, "Gestionnaire Financier");
+        afficherStatus("✅ Frais de gestion envoyés avec succès !", "success");
+        document.getElementById("texteFrais").value = "";
+    } catch (e) {
+        afficherStatus(`❌ Erreur Frais : ${e.message}`, "error");
+    } finally { btn.disabled = false; }
+}
 
-            if (!reponse.ok) {
-                throw new Error(`Erreur Discord : ${reponse.statusText}`);
-            }
-            await new Promise(resolve => setTimeout(resolve, 250));
-        }
-
-        afficherStatus("✅ Tout a été envoyé avec succès sur Discord !", "success");
-        document.getElementById("grosTexte").value = ""; 
-
-    } catch (erreur) {
-        afficherStatus(`❌ Erreur lors de l'envoi : ${erreur.message}`, "error");
-    } finally {
-        btn.disabled = false;
+// Fonction globale d'envoi
+async function envoyerSurDiscord(url, paquetsMessages, nomRobot) {
+    for (const msgContent of paquetsMessages) {
+        const reponse = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: nomRobot,
+                avatar_url: "https://i.imgur.com/AfFp7pu.png",
+                content: msgContent
+            })
+        });
+        if (!reponse.ok) throw new Error(`Erreur Discord : ${reponse.statusText}`);
+        await new Promise(r => setTimeout(r, 250));
     }
 }
 
@@ -424,6 +505,8 @@ function afficherStatus(message, type) {
     statusBox.innerText = message;
     statusBox.className = "status " + type;
     statusBox.style.display = "block";
+    if(type === "success") statusBox.style.backgroundColor = "#2e7d32";
+    if(type === "error") statusBox.style.backgroundColor = "#d32f2f";
 }
 </script>
 
