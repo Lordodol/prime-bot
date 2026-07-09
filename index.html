@@ -375,15 +375,23 @@
     </div>
 
     <div id="tab-calculs" class="tab-content">
-        <h2>🧮 Calculateur de Frais (% Exploitation) & Classement</h2>
+        <h2>🧮 Calculateur de Frais & Classement</h2>
         
         <div class="form-group">
-            <label for="texteResultatsFiliales">Tableau complet des résultats des filiales :</label>
-            <p class="input-desc">Doit contenir l'ordre : Filiale, Trésorerie, Résultat d'exploitation, Résultat NET, Bénéfices/pertes.</p>
-            <textarea id="texteResultatsFiliales" placeholder="Filiale    Trésorerie    Résultat d'exploitation    Résultat NET..."></textarea>
+            <label for="typeClassement">🎯 Type de données injectées / Classement souhaité :</label>
+            <select id="typeClassement" onchange="ajusterDescriptionChamps()">
+                <option value="exploitation">📊 Tableau des Résultats (Classement par Résultat d'exploitation + Calcul Frais)</option>
+                <option value="capitaux">💎 Tableau d'Apport (Classement par Capitaux Propres)</option>
+            </select>
         </div>
 
         <div class="form-group">
+            <label for="texteResultatsFiliales" id="labelDonneesTableau">Tableau complet des résultats des filiales :</label>
+            <p class="input-desc" id="descDonneesTableau">Doit contenir l'ordre : Filiale, Trésorerie, Résultat d'exploitation, Résultat NET, Bénéfices/pertes.</p>
+            <textarea id="texteResultatsFiliales" placeholder="Filiale    Trésorerie    Résultat d'exploitation    Résultat NET..."></textarea>
+        </div>
+
+        <div id="sectionCalculPourcentage" class="form-group">
             <label for="pourcentageFrais">Pourcentage à appliquer sur le Résultat d'exploitation :</label>
             <input type="text" id="pourcentageFrais" placeholder="Ex : 15 (pour 15%)" style="max-width: 200px;">
         </div>
@@ -418,6 +426,32 @@ function switchTab(tabId) {
     
     const statusBox = document.getElementById("statusBox");
     statusBox.style.display = "none";
+}
+
+// Dynamisation de l'interface en fonction du mode de classement sélectionné
+function ajusterDescriptionChamps() {
+    const type = document.getElementById("typeClassement").value;
+    const label = document.getElementById("labelDonneesTableau");
+    const desc = document.getElementById("descDonneesTableau");
+    const inputTexte = document.getElementById("texteResultatsFiliales");
+    const btnCalcul = document.getElementById("btnCalculerFrais");
+    const sectionPourcent = document.getElementById("sectionCalculPourcentage");
+    const zoneResultat = document.getElementById("zoneResultatCalcul");
+
+    if (type === "capitaux") {
+        label.innerText = "Tableau des Apports & Capitaux propres :";
+        desc.innerText = "Doit contenir l'ordre : Filiale, Apport, Capitaux propres, Latence, Plus-value.";
+        inputTexte.placeholder = "Filiale    Apport    Capitaux propres    Latence    Plus-value...";
+        btnCalcul.disabled = true; // Désactivé car pas de calcul de frais sur ce tableau
+        sectionPourcent.style.display = "none";
+        zoneResultat.classList.add("hidden");
+    } else {
+        label.innerText = "Tableau complet des résultats des filiales :";
+        desc.innerText = "Doit contenir l'ordre : Filiale, Trésorerie, Résultat d'exploitation, Résultat NET, Bénéfices/pertes.";
+        inputTexte.placeholder = "Filiale    Trésorerie    Résultat d'exploitation    Résultat NET...";
+        btnCalcul.disabled = false;
+        sectionPourcent.style.display = "block";
+    }
 }
 
 // --- CONFIGURATION WEBHOOKS & SCRIPT D'ORIGINE ---
@@ -699,7 +733,7 @@ async function traiterEtEnvoyerFrais() {
         return;
     }
     if (!texteFrais) {
-        afficherStatus("❌ Le champ de texte des frais is vide.", "error");
+        afficherStatus("❌ Le champ de texte des frais est vide.", "error");
         return;
     }
 
@@ -785,6 +819,7 @@ async function traiterEtEnvoyerFrais() {
 async function genererEtEnvoyerClassement() {
     const selectWebhookClassement = document.getElementById("selectWebhookClassement");
     const texte = document.getElementById("texteResultatsFiliales").value.trim();
+    const typeClassement = document.getElementById("typeClassement").value;
     const btn = document.getElementById("btnEnvoyerClassement");
 
     if (!selectWebhookClassement.value) {
@@ -792,7 +827,7 @@ async function genererEtEnvoyerClassement() {
         return;
     }
     if (!texte) {
-        afficherStatus("❌ Insérez d'abord des lignes de données dans le champ de calcul.", "error");
+        afficherStatus("❌ Insérez d'abord des lignes de données dans le champ.", "error");
         return;
     }
 
@@ -800,14 +835,28 @@ async function genererEtEnvoyerClassement() {
     afficherStatus("⏳ Structuration des tableaux d'honneur...", "info");
 
     try {
-        const donnees = analyserTableauResultats(texte);
+        let donnees = [];
+        let titreEmbed = "";
+        let suffixeUnite = "";
+
+        if (typeClassement === "capitaux") {
+            donnees = analyserTableauCapitaux(texte);
+            titreEmbed = "🏆 Classement Général — Capitaux Propres";
+            suffixeUnite = " 💎";
+        } else {
+            donnees = analyserTableauResultats(texte);
+            titreEmbed = "🏆 Classement Général — Résultat d'exploitation";
+            suffixeUnite = "Ø";
+        }
+
         if (donnees.length === 0) {
-            afficherStatus("❌ Structure de données introuvable pour le classement.", "error");
+            afficherStatus("❌ Structure de données introuvable ou incorrecte pour le classement.", "error");
             btn.disabled = false;
             return;
         }
 
-        const classees = donnees.slice().sort((a, b) => (b.resultatExploitation > a.resultatExploitation ? 1 : b.resultatExploitation < a.resultatExploitation ? -1 : 0));
+        // Tri décroissant selon la valeur cible du classement
+        const classees = donnees.slice().sort((a, b) => (b.valeurCible > a.valeurCible ? 1 : b.valeurCible < a.valeurCible ? -1 : 0));
 
         const medailles = ["🥇", "🥈", "🥉"];
         let currentFields = [];
@@ -815,20 +864,20 @@ async function genererEtEnvoyerClassement() {
 
         classees.forEach((d, index) => {
             const rangAffiche = index < 3 ? medailles[index] : `🔹 ${index + 1}.`;
-            const estNegatif = d.resultatExploitation < 0n;
-            const valeurAbsolue = estNegatif ? -d.resultatExploitation : d.resultatExploitation;
-            const montantFormate = valeurAbsolue === 0n ? "0 EØ" : `${formaterGrandNombre(valeurAbsolue.toString())}Ø`;
+            const estNegatif = d.valeurCible < 0n;
+            const valeurAbsolue = estNegatif ? -d.valeurCible : d.valeurCible;
+            const montantFormate = valeurAbsolue === 0n ? `0${suffixeUnite}` : `${formaterGrandNombre(valeurAbsolue.toString())}${suffixeUnite}`;
             const signe = estNegatif ? "-" : "";
 
             currentFields.push({
                 name: `${rangAffiche} ${d.filiale}`,
-                value: `Résultat : \`${signe}${montantFormate}\``,
+                value: `Valeur : \`${signe}${montantFormate}\``,
                 inline: true
             });
 
             if (currentFields.length === 24) {
                 embeds.push({
-                    title: "🏆 Classement Général — Résultat d'exploitation",
+                    title: titreEmbed,
                     color: 15774258, // #F0B232
                     fields: currentFields
                 });
@@ -838,7 +887,7 @@ async function genererEtEnvoyerClassement() {
 
         if (currentFields.length > 0) {
             embeds.push({
-                title: embeds.length > 0 ? "🏆 Classement Général (Suite)" : "🏆 Classement Général — Résultat d'exploitation",
+                title: embeds.length > 0 ? `${titreEmbed} (Suite)` : titreEmbed,
                 color: 15774258,
                 fields: currentFields,
                 footer: { text: "Service des Statistiques" },
@@ -863,8 +912,9 @@ function convertirEnBigIntSigne(chaine) {
     return negatif ? -valeur : valeur;
 }
 
+// Analyseur V1 - Tableau des résultats (Exploitation)
 function analyserTableauResultats(texte) {
-    const lignes = text = texte.split("\n");
+    const lignes = texte.split("\n");
     const resultats = [];
 
     for (let i = 0; i < lignes.length; i++) {
@@ -886,7 +936,40 @@ function analyserTableauResultats(texte) {
             tresorerie: convertirEnBigIntSigne(montants[0]),
             resultatExploitation: convertirEnBigIntSigne(montants[1]),
             resultatNet: convertirEnBigIntSigne(montants[2]),
-            beneficePerte: convertirEnBigIntSigne(montants[3])
+            beneficePerte: convertirEnBigIntSigne(montants[3]),
+            valeurCible: convertirEnBigIntSigne(montants[1]) // Résultat d'exploitation
+        });
+    }
+    return resultats;
+}
+
+// Analyseur V2 - Tableau des apports (Capitaux Propres)
+function analyserTableauCapitaux(texte) {
+    const lignes = texte.split("\n");
+    const resultats = [];
+
+    for (let i = 0; i < lignes.length; i++) {
+        let ligne = lignes[i].trim();
+        if (!ligne) continue;
+        ligne = ligne.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, " ");
+
+        const tokens = ligne.split(/\s+/).filter(t => t.length > 0);
+        if (tokens.length === 0) continue;
+        if (tokens[0].toLowerCase() === "filiale" || tokens[1]?.toLowerCase() === "apport") continue;
+        if (tokens.length < 5) continue;
+
+        // Ordre : Filiale, Apport, Capitaux propres, Latence, Plus-value
+        const montants = tokens.slice(-4); // Les 4 dernières colonnes numériques
+        const filiale = tokens.slice(0, tokens.length - 4).join(" ").trim();
+        if (!filiale) continue;
+
+        resultats.push({
+            filiale: filiale,
+            apport: convertirEnBigIntSigne(montants[0]),
+            capitauxPropres: convertirEnBigIntSigne(montants[1]), // Index 1 de la fin numérique
+            latence: convertirEnBigIntSigne(montants[2]),
+            plusValue: convertirEnBigIntSigne(montants[3]),
+            valeurCible: convertirEnBigIntSigne(montants[1]) // Tri ciblé sur les Capitaux propres
         });
     }
     return resultats;
@@ -902,7 +985,7 @@ function calculerFraisParPourcentage() {
     const texte = document.getElementById("texteResultatsFiliales").value.trim();
     const pourcentageStr = document.getElementById("pourcentageFrais").value.trim();
     const zoneResultat = document.getElementById("zoneResultatCalcul");
-    const sortieTextarea = document.getElementById("resultatFraisCalcules");
+    const shortcutBtn = document.getElementById("resultatFraisCalcules");
 
     if (!texte) {
         afficherStatus("❌ Veuillez renseigner le tableau complet des résultats.", "error");
@@ -921,7 +1004,7 @@ function calculerFraisParPourcentage() {
 
     const donnees = analyserTableauResultats(texte);
     if (donnees.length === 0) {
-        afficherStatus("❌ Format de ligne illisible ou incorrect.", "error");
+        afficherStatus("❌ Format de ligne de résultats illisible ou incorrect.", "error");
         zoneResultat.classList.add("hidden");
         return;
     }
@@ -931,7 +1014,7 @@ function calculerFraisParPourcentage() {
         return `${d.filiale}\t${frais.toString()}`;
     });
 
-    sortieTextarea.value = lignesSortie.join("\n");
+    shortcutBtn.value = lignesSortie.join("\n");
     zoneResultat.classList.remove("hidden");
     afficherStatus(`✅ Modélisation terminée. ${donnees.length} entités calculées à ${pourcentage}%.`, "success");
 }
@@ -961,9 +1044,8 @@ function insererDansChampFrais() {
 
 // --- FONCTION GLOBALE D'ENVOI DE STRUCTURES EMBED ---
 async function envoyerEmbedsSurDiscord(url, embedsArray, nomRobot) {
-    // Discord accepte jusqu'à 10 embeds par message HTTP, on les regroupe intelligemment
     while (embedsArray.length > 0) {
-        const lot = embedsArray.splice(0, 5); // Lots de 5 max par sécurité structurelle
+        const lot = embedsArray.splice(0, 5); 
         const reponse = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -974,7 +1056,7 @@ async function envoyerEmbedsSurDiscord(url, embedsArray, nomRobot) {
             })
         });
         if (!reponse.ok) throw new Error(`Erreur Discord Embeds : ${reponse.statusText}`);
-        await new Promise(r => setTimeout(r, 500)); // Protection anti-rate limit accrue pour les embeds
+        await new Promise(r => setTimeout(r, 500)); 
     }
 }
 
