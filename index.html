@@ -416,7 +416,6 @@ function switchTab(tabId) {
     document.getElementById(tabId).classList.add('active');
     event.currentTarget.classList.add('active');
     
-    // On efface le statut de l'ancienne action pour nettoyer l'écran
     const statusBox = document.getElementById("statusBox");
     statusBox.style.display = "none";
 }
@@ -480,7 +479,6 @@ function convertirEnBigInt(chaine) {
     return chiffresSeuls ? BigInt(chiffresSeuls) : 0n;
 }
 
-// Système de déverrouillage mis à jour
 function detecterCode() {
     const code = document.getElementById("codeAcces").value.trim();
     const authScreen = document.getElementById("authScreen");
@@ -538,7 +536,6 @@ function detecterCode() {
             selectWebhookClassement.innerHTML = "<option value=''>-- Aucun salon 'classement' trouvé --</option>";
         }
         
-        // Transférer la valeur de la clé vers l'intérieur si besoin mais l'important est de switcher d'écran
         authScreen.classList.add("hidden");
         mainContent.classList.remove("hidden");
         afficherStatus("🔓 Clé d'accès validée. Bienvenue !", "success");
@@ -570,10 +567,9 @@ function formaterGrandNombre(chaineNombre) {
     return BigInt(nette).toLocaleString('fr-FR');
 }
 
-// --- TRAITEMENT DES PRIMES ---
+// --- TRAITEMENT DES PRIMES AVEC EMBEDS ---
 async function traiterEtEnvoyerPrimes() {
     const selectWebhookPrimes = document.getElementById("selectWebhookPrimes");
-    const codeAcces = document.getElementById("codeAcces").value.trim();
     const grosTexte = document.getElementById("grosTexte").value.trim();
     const primeMaxSaisie = document.getElementById("primeMaxBase").value.trim();
     const exclureZeros = document.getElementById("exclureZeros").checked;
@@ -645,37 +641,53 @@ async function traiterEtEnvoyerPrimes() {
         }
 
         let listeTriees = Array.from(primesCumulees.entries()).sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0));
-        let messageActuel = "💰 **Rapport des Primes des Directeurs :**\n\n";
-        const messagesAEnvoyer = [];
+        
+        let currentFields = [];
+        const embeds = [];
 
         for (const [directeur, totalPrime] of listeTriees) {
             if (exclureZeros && totalPrime === 0n) continue;
-            const ligneFormat = `👤 **${directeur}** ➔ \`${formaterGrandNombre(totalPrime.toString())} 💰\`\n`;
-            if ((messageActuel + ligneFormat).length > 1800) {
-                messagesAEnvoyer.push(messageActuel);
-                messageActuel = "🔄 **Suite du rapport :**\n\n" + ligneFormat;
-            } else messageActuel += ligneFormat;
+
+            currentFields.push({
+                name: `👤 ${directeur}`,
+                value: `\`${formaterGrandNombre(totalPrime.toString())} 💰\``,
+                inline: true
+            });
+
+            if (currentFields.length === 24) {
+                embeds.push({
+                    title: "💰 Rapport des Primes des Directeurs",
+                    color: 5793266, // #5865F2
+                    fields: currentFields
+                });
+                currentFields = [];
+            }
         }
 
-        const ligneTotal = `\n⚙️ **Somme totale des primes versées :** \`${formaterGrandNombre(sommeTotalePrimes.toString())} 💰\``;
-        if ((messageActuel + ligneTotal).length > 1950) {
-            messagesAEnvoyer.push(messageActuel);
-            messageActuel = ligneTotal;
-        } else {
-            messageActuel += ligneTotal;
-        }
+        // Ajout du champ total global
+        currentFields.push({
+            name: "📊 Somme totale versée",
+            value: `\`${formaterGrandNombre(sommeTotalePrimes.toString())} 💰\``,
+            inline: false
+        });
 
-        if (messageActuel && messageActuel.length > 45) messagesAEnvoyer.push(messageActuel);
+        embeds.push({
+            title: embeds.length > 0 ? "💰 Rapport des Primes (Suite)" : "💰 Rapport des Primes des Directeurs",
+            color: 5793266,
+            fields: currentFields,
+            footer: { text: "Gestionnaire des Primes Pro" },
+            timestamp: new Date().toISOString()
+        });
 
-        await envoyerSurDiscord(selectWebhookPrimes.value, messagesAEnvoyer, "Gestionnaire des Primes");
-        afficherStatus("✅ Rapport de primes traité et expédié sur Discord avec succès !", "success");
+        await envoyerEmbedsSurDiscord(selectWebhookPrimes.value, embeds, "Gestionnaire des Primes");
+        afficherStatus("✅ Rapport de primes envoyé sous forme d'Embeds !", "success");
         document.getElementById("grosTexte").value = "";
     } catch (e) {
         afficherStatus(`❌ Erreur Système Primes : ${e.message}`, "error");
     } finally { btn.disabled = false; }
 }
 
-// --- TRAITEMENT DES FRAIS ---
+// --- TRAITEMENT DES FRAIS AVEC EMBEDS ---
 async function traiterEtEnvoyerFrais() {
     const selectWebhookFrais = document.getElementById("selectWebhookFrais");
     const texteFrais = document.getElementById("texteFrais").value.trim();
@@ -687,7 +699,7 @@ async function traiterEtEnvoyerFrais() {
         return;
     }
     if (!texteFrais) {
-        afficherStatus("❌ Le champ de texte des frais est vide.", "error");
+        afficherStatus("❌ Le champ de texte des frais is vide.", "error");
         return;
     }
 
@@ -724,46 +736,124 @@ async function traiterEtEnvoyerFrais() {
         }
 
         let listeFraisTriees = Array.from(fraisParFiliale.entries()).sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0));
-        let messageActuel = "🏢 **Rapport des Frais de Gestion des Filiales :**\n\n";
-        const messagesAEnvoyer = [];
+        
+        let currentFields = [];
+        const embeds = [];
 
         for (const [filiale, totalFrais] of listeFraisTriees) {
             if (exclureZeros && totalFrais === 0n) continue;
 
-            const ligneFormat = `🏢 **${filiale}** ➔ \`${formaterGrandNombre(totalFrais.toString())} 💸\`\n`;
-            if ((messageActuel + ligneFormat).length > 1800) {
-                messagesAEnvoyer.push(messageActuel);
-                messageActuel = "🔄 **Suite du rapport des frais :**\n\n" + ligneFormat;
-            } else {
-                messageActuel += ligneFormat;
+            currentFields.push({
+                name: `🏢 ${filiale}`,
+                value: `\`${formaterGrandNombre(totalFrais.toString())} 💸\``,
+                inline: true
+            });
+
+            if (currentFields.length === 24) {
+                embeds.push({
+                    title: "🏢 Frais de Gestion des Filiales",
+                    color: 2335962, // #23A55A
+                    fields: currentFields
+                });
+                currentFields = [];
             }
         }
 
-        const ligneTotal = `\n📊 **Somme totale des frais de gestion :** \`${formaterGrandNombre(sommeTotaleFrais.toString())} 💸\``;
-        if ((messageActuel + ligneTotal).length > 1950) {
-            messagesAEnvoyer.push(messageActuel);
-            messageActuel = ligneTotal;
-        } else {
-            messageActuel += ligneTotal;
-        }
+        currentFields.push({
+            name: "📊 Somme totale des frais",
+            value: `\`${formaterGrandNombre(sommeTotaleFrais.toString())} 💸\``,
+            inline: false
+        });
 
-        if (messageActuel && messageActuel.length > 55) messagesAEnvoyer.push(messageActuel);
+        embeds.push({
+            title: embeds.length > 0 ? "🏢 Frais de Gestion (Suite)" : "🏢 Frais de Gestion des Filiales",
+            color: 2335962,
+            fields: currentFields,
+            footer: { text: "Gestionnaire Financier Pro" },
+            timestamp: new Date().toISOString()
+        });
 
-        if (messagesAEnvoyer.length === 0 || (messagesAEnvoyer.length === 1 && sommeTotaleFrais === 0n && exclureZeros)) {
-            afficherStatus("⚠️ Aucune donnée pertinente à transmettre (Valeurs nulles).", "error");
-            btn.disabled = false;
-            return;
-        }
-
-        await envoyerSurDiscord(selectWebhookFrais.value, messagesAEnvoyer, "Gestionnaire Financier");
-        afficherStatus("✅ Les frais de gestion ont été consolidés et envoyés !", "success");
+        await envoyerEmbedsSurDiscord(selectWebhookFrais.value, embeds, "Gestionnaire Financier");
+        afficherStatus("✅ Les frais de gestion ont été envoyés sous forme d'Embeds !", "success");
         document.getElementById("texteFrais").value = "";
     } catch (e) {
         afficherStatus(`❌ Erreur Système Frais : ${e.message}`, "error");
     } finally { btn.disabled = false; }
 }
 
-// --- LOGIQUE CALCULS ET CALCULATEURS PAR % ---
+// --- CLASSEMENT AVEC EMBEDS ---
+async function genererEtEnvoyerClassement() {
+    const selectWebhookClassement = document.getElementById("selectWebhookClassement");
+    const texte = document.getElementById("texteResultatsFiliales").value.trim();
+    const btn = document.getElementById("btnEnvoyerClassement");
+
+    if (!selectWebhookClassement.value) {
+        afficherStatus("❌ Le salon dédié aux classements n'est pas configuré.", "error");
+        return;
+    }
+    if (!texte) {
+        afficherStatus("❌ Insérez d'abord des lignes de données dans le champ de calcul.", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    afficherStatus("⏳ Structuration des tableaux d'honneur...", "info");
+
+    try {
+        const donnees = analyserTableauResultats(texte);
+        if (donnees.length === 0) {
+            afficherStatus("❌ Structure de données introuvable pour le classement.", "error");
+            btn.disabled = false;
+            return;
+        }
+
+        const classees = donnees.slice().sort((a, b) => (b.resultatExploitation > a.resultatExploitation ? 1 : b.resultatExploitation < a.resultatExploitation ? -1 : 0));
+
+        const medailles = ["🥇", "🥈", "🥉"];
+        let currentFields = [];
+        const embeds = [];
+
+        classees.forEach((d, index) => {
+            const rangAffiche = index < 3 ? medailles[index] : `🔹 ${index + 1}.`;
+            const estNegatif = d.resultatExploitation < 0n;
+            const valeurAbsolue = estNegatif ? -d.resultatExploitation : d.resultatExploitation;
+            const montantFormate = valeurAbsolue === 0n ? "0 EØ" : `${formaterGrandNombre(valeurAbsolue.toString())}Ø`;
+            const signe = estNegatif ? "-" : "";
+
+            currentFields.push({
+                name: `${rangAffiche} ${d.filiale}`,
+                value: `Résultat : \`${signe}${montantFormate}\``,
+                inline: true
+            });
+
+            if (currentFields.length === 24) {
+                embeds.push({
+                    title: "🏆 Classement Général — Résultat d'exploitation",
+                    color: 15774258, // #F0B232
+                    fields: currentFields
+                });
+                currentFields = [];
+            }
+        });
+
+        if (currentFields.length > 0) {
+            embeds.push({
+                title: embeds.length > 0 ? "🏆 Classement Général (Suite)" : "🏆 Classement Général — Résultat d'exploitation",
+                color: 15774258,
+                fields: currentFields,
+                footer: { text: "Service des Statistiques" },
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        await envoyerEmbedsSurDiscord(selectWebhookClassement.value, embeds, "Classement des Filiales");
+        afficherStatus(`🏆 Classement général publié avec succès sous forme d'Embeds !`, "success");
+    } catch (e) {
+        afficherStatus(`❌ Échec d'envoi du classement : ${e.message}`, "error");
+    } finally { btn.disabled = false; }
+}
+
+// Fonction utilitaire d'analyse commune
 function convertirEnBigIntSigne(chaine) {
     let s = chaine.trim();
     if (!s) return 0n;
@@ -774,7 +864,7 @@ function convertirEnBigIntSigne(chaine) {
 }
 
 function analyserTableauResultats(texte) {
-    const lignes = texte.split("\n");
+    const lignes = text = texte.split("\n");
     const resultats = [];
 
     for (let i = 0; i < lignes.length; i++) {
@@ -815,7 +905,7 @@ function calculerFraisParPourcentage() {
     const sortieTextarea = document.getElementById("resultatFraisCalcules");
 
     if (!texte) {
-        afficherStatus("❌ Veuillez renseigner le tableau complet des résultats dans la zone requise.", "error");
+        afficherStatus("❌ Veuillez renseigner le tableau complet des résultats.", "error");
         return;
     }
     if (!pourcentageStr) {
@@ -831,7 +921,7 @@ function calculerFraisParPourcentage() {
 
     const donnees = analyserTableauResultats(texte);
     if (donnees.length === 0) {
-        afficherStatus("❌ Format de ligne illisible ou en-tête manquante dans votre import.", "error");
+        afficherStatus("❌ Format de ligne illisible ou incorrect.", "error");
         zoneResultat.classList.add("hidden");
         return;
     }
@@ -856,7 +946,7 @@ async function copierResultatFrais() {
         const zone = document.getElementById("resultatFraisCalcules");
         zone.select();
         document.execCommand("copy");
-        afficherStatus("📋 Copie manuelle requise sur votre navigateur.", "success");
+        afficherStatus("📋 Copie manuelle requise.", "success");
     }
 }
 
@@ -869,79 +959,22 @@ function insererDansChampFrais() {
     switchTab('tab-frais');
 }
 
-// --- CLASSEMENT ---
-async function genererEtEnvoyerClassement() {
-    const selectWebhookClassement = document.getElementById("selectWebhookClassement");
-    const texte = document.getElementById("texteResultatsFiliales").value.trim();
-    const btn = document.getElementById("btnEnvoyerClassement");
-
-    if (!selectWebhookClassement.value) {
-        afficherStatus("❌ Le salon dédié aux classements n'est pas configuré pour cette clé.", "error");
-        return;
-    }
-    if (!texte) {
-        afficherStatus("❌ Insérez d'abord des lignes de données dans le champ de calcul.", "error");
-        return;
-    }
-
-    btn.disabled = true;
-    afficherStatus("⏳ Structuration du tableau d'honneur...", "info");
-
-    try {
-        const donnees = analyserTableauResultats(texte);
-        if (donnees.length === 0) {
-            afficherStatus("❌ Structure de données introuvable pour le classement.", "error");
-            btn.disabled = false;
-            return;
-        }
-
-        const classees = donnees.slice().sort((a, b) => {
-            if (a.resultatExploitation > b.resultatExploitation) return -1;
-            if (a.resultatExploitation < b.resultatExploitation) return 1;
-            return 0;
-        });
-
-        const medailles = ["🥇", "🥈", "🥉"];
-        let messageActuel = "🏆 **Classement — Résultat d'exploitation**\n\n";
-        const messagesAEnvoyer = [];
-
-        classees.forEach((d, index) => {
-            const rangAffiche = index < 3 ? medailles[index] : `${index + 1}.`;
-            const estNegatif = d.resultatExploitation < 0n;
-            const valeurAbsolue = estNegatif ? -d.resultatExploitation : d.resultatExploitation;
-            const montantFormate = valeurAbsolue === 0n ? "0 EØ" : `${formaterGrandNombre(valeurAbsolue.toString())}Ø`;
-            const signe = estNegatif ? "-" : "";
-            const ligneFormat = `${rangAffiche} **${d.filiale}**\n📊 Re : **${signe}${montantFormate}**\n\n`;
-
-            if ((messageActuel + ligneFormat).length > 1900) {
-                messagesAEnvoyer.push(messageActuel);
-                messageActuel = "🔄 **Suite du classement :**\n\n" + ligneFormat;
-            } else messageActuel += ligneFormat;
-        });
-
-        if (messageActuel.trim()) messagesAEnvoyer.push(messageActuel);
-
-        await envoyerSurDiscord(selectWebhookClassement.value, messagesAEnvoyer, "Classement des Filiales");
-        afficherStatus(`🏆 Classement général publié avec succès (${donnees.length} filiales) !`, "success");
-    } catch (e) {
-        afficherStatus(`❌ Échec d'envoi du classement : ${e.message}`, "error");
-    } finally { btn.disabled = false; }
-}
-
-// Fonction globale d'envoi Webhook
-async function envoyerSurDiscord(url, paquetsMessages, nomRobot) {
-    for (const msgContent of paquetsMessages) {
+// --- FONCTION GLOBALE D'ENVOI DE STRUCTURES EMBED ---
+async function envoyerEmbedsSurDiscord(url, embedsArray, nomRobot) {
+    // Discord accepte jusqu'à 10 embeds par message HTTP, on les regroupe intelligemment
+    while (embedsArray.length > 0) {
+        const lot = embedsArray.splice(0, 5); // Lots de 5 max par sécurité structurelle
         const reponse = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 username: nomRobot,
                 avatar_url: "https://i.imgur.com/AfFp7pu.png",
-                content: msgContent
+                embeds: lot
             })
         });
-        if (!reponse.ok) throw new Error(`Erreur Discord : ${reponse.statusText}`);
-        await new Promise(r => setTimeout(r, 250));
+        if (!reponse.ok) throw new Error(`Erreur Discord Embeds : ${reponse.statusText}`);
+        await new Promise(r => setTimeout(r, 500)); // Protection anti-rate limit accrue pour les embeds
     }
 }
 
