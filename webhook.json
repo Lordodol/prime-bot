@@ -5,7 +5,7 @@
             "url": "https://discordapp.com/api/webhooks/1524339415567171664/jI_sV3e13fIWATIFPzIc4qMqI3gBZarIi_vXe2lUSYWj8UFothtVGR49NaaM7b1QYzcx"
         },
         {
-            "nom": "FDG Patrimonia", 
+            "nom": "FDG Patrimonia",
             "url": "https://discordapp.com/api/webhooks/1524356475227607070/s-XpdzgUyTYYCAdiydlJ585Qu5NK8N22F3vVcH-GJR8B956n1Sg9IPBIjuDqfnyNn3Nr"
         },
         {
@@ -23,6 +23,10 @@
         {
             "nom": "FDG Apero-partie",
             "url": "https://discordapp.com/api/webhooks/1524413015359881340/BYsugD9oCYqm5OM2yasbmMC9u2X66AV8egQyoU31QFI9dxEBKK2dqseF4oyiEHQnuR9x"
+        },
+        {
+            "nom": "classement patrimonia",
+            "url": "https://discordapp.com/api/webhooks/1524684570736197645/pWKT8ephA7Czpg8QvshAkkKssxhRFNrpixiM7EoQoxAdtHFD7LyeZhTOHZC83OLL51GA"
         }
     ],
     "creedex77": [
@@ -41,11 +45,11 @@
             "url": "https://discord.com/api/webhooks/1524497137872801833/8IcbDYv8spI9YUX-AzSq8sNLKQjx74ijhM5n60e8MwH1lqAx40RjpSBoRme74-UwPjS-"
         },
         {
-            "nom": "classement resulat filiales",
+            "nom": "classement capital",
             "url": "https://discord.com/api/webhooks/1524709112796155985/s0laVl5-Gxb-Afo49aQVrD7GgUK6dbZLtwo_6ztSWuY7Yk-a4s-4KkmRmsUKUgnPMEr3"
         },
         {
-            "nom": "classement filiales",
+            "nom": "classement capital total",
             "url": "https://discord.com/api/webhooks/1524716695430889492/TWf-r9Kipv5JK2H-Ict-07vJ2EjvbMhgKbZVGTlVFhlJS194405FQcXbUW1yB232imCq"
         }
     ]
