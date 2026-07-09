@@ -3,236 +3,446 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyseur de Primes & Frais Discord</title>
+    <title>Analyseur Pro - Primes & Frais Discord</title>
     <style>
+        :root {
+            --bg-main: #1e1f22;
+            --bg-container: #2b2d31;
+            --bg-input: #1e1f22;
+            --text-normal: #dbdee1;
+            --text-muted: #949ba4;
+            --text-white: #ffffff;
+            --brand-color: #5865f2;
+            --brand-hover: #4752c4;
+            --success-color: #23a55a;
+            --success-hover: #1a7f43;
+            --warning-color: #f0b232;
+            --warning-hover: #c99322;
+            --danger-color: #f23f43;
+            --border-radius: 12px;
+            --transition: all 0.25s ease;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #2f3136;
-            color: #dcddde;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-normal);
             margin: 0;
-            padding: 20px;
+            padding: 40px 20px;
             display: flex;
             justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
+
         .container {
-            background-color: #36393f;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background-color: var(--bg-container);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             width: 100%;
-            max-width: 700px;
+            max-width: 800px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
+
         h1 {
-            color: #fff;
+            color: var(--text-white);
             text-align: center;
-            margin-bottom: 25px;
-            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
+
         h2 {
-            color: #fff;
-            border-bottom: 2px solid #5865f2;
-            padding-bottom: 8px;
-            margin-top: 30px;
-            font-size: 18px;
+            color: var(--text-white);
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
+        /* --- ÉCRAN DE VERROUILLAGE --- */
+        #authScreen {
+            max-width: 450px;
+            margin: 100px auto 0 auto;
+            text-align: center;
+        }
+        
+        #authScreen .lock-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            color: var(--brand-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        /* --- STRUCTURE DES ONGLETS --- */
+        .tabs-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+            background-color: var(--bg-input);
+            padding: 6px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-white);
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--text-white);
+            background-color: var(--brand-color);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- FORMULAIRES & INPUTS --- */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #b9bbbe;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-white);
+            font-size: 14px;
         }
+
+        .input-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: -6px;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--bg-input);
+            border: 1px solid rgba(0,0,0,0.5);
+            border-radius: 6px;
+            color: var(--text-white);
+            font-family: inherit;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--brand-color);
+            box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
+        }
+
+        select option {
+            background-color: var(--bg-container);
+            color: var(--text-white);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 160px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
         .checkbox-container {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 25px;
             cursor: pointer;
-            font-weight: bold;
-            color: #b9bbbe;
+            font-weight: 600;
+            color: var(--text-normal);
+            user-select: none;
+            background: rgba(255,255,255,0.02);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px dashed rgba(255,255,255,0.1);
         }
+
         .checkbox-container input {
-            margin-right: 10px;
             width: 18px;
             height: 18px;
             cursor: pointer;
+            accent-color: var(--brand-color);
         }
-        /* Correction de l'alignement ici : Ciblage propre de tous les inputs text, selects et textareas */
-        input[type="text"], select, textarea {
-            width: 100%;
-            padding: 12px;
-            background-color: #202225;
-            border: 1px solid #222;
-            border-radius: 4px;
-            color: #fff;
-            font-family: inherit;
-            box-sizing: border-box;
-            margin-bottom: 20px;
-            font-size: 14px;
+
+        /* --- BOUTONS --- */
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
         }
-        select option {
-            background-color: #2f3136;
-            color: #fff;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 150px;
-        }
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #5865f2;
-        }
+
         button {
             width: 100%;
-            padding: 14px;
-            background-color: #5865f2;
-            color: #fff;
+            padding: 14px 20px;
+            background-color: var(--brand-color);
+            color: var(--text-white);
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 15px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
-            margin-bottom: 10px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        button.btn-frais {
-            background-color: #248046;
-        }
-        button.btn-frais:hover {
-            background-color: #1a6535;
-        }
-        button.btn-calcul {
-            background-color: #e67e22;
-        }
-        button.btn-calcul:hover {
-            background-color: #ba6418;
-        }
-        button.btn-secondaire {
-            background-color: #4f545c;
-        }
-        button.btn-secondaire:hover {
-            background-color: #3d4147;
-        }
-        #resultatFraisCalcules {
-            font-family: 'Consolas', 'Courier New', monospace;
-            background-color: #202225;
-        }
-        button:hover {
-            background-color: #4752c4;
-        }
+
+        button:hover { background-color: var(--brand-hover); }
+        
+        button.btn-frais { background-color: var(--success-color); }
+        button.btn-frais:hover { background-color: var(--success-hover); }
+        
+        button.btn-calcul { background-color: var(--warning-color); }
+        button.btn-calcul:hover { background-color: var(--warning-hover); }
+        
+        button.btn-secondaire { background-color: #4f545c; }
+        button.btn-secondaire:hover { background-color: #686d73; }
+
         button:disabled {
-            background-color: #4f545c;
+            background-color: #4f545c !important;
+            opacity: 0.6;
             cursor: not-allowed;
         }
+
+        /* --- ALERTES & STATUTS --- */
         .status {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 4px;
-            text-align: center;
-            font-weight: bold;
+            margin-top: 25px;
+            padding: 16px;
+            border-radius: 6px;
+            font-weight: 600;
             display: none;
             white-space: pre-line;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 5px solid transparent;
         }
-        .success { background-color: #2e7d32; color: #fff; }
-        .error { background-color: #d32f2f; color: #fff; }
-        .hidden { display: none; }
+        .status.success { 
+            background-color: rgba(35, 165, 90, 0.15); 
+            color: #2dc76d;
+            border-left-color: var(--success-color);
+        }
+        .status.error { 
+            background-color: rgba(242, 63, 67, 0.15); 
+            color: #ff5c60;
+            border-left-color: var(--danger-color);
+        }
+        .status.info {
+            background-color: rgba(88, 101, 242, 0.15);
+            color: #7289da;
+            border-left-color: var(--brand-color);
+            display: block;
+        }
+
+        /* --- AUXILIAIRES --- */
+        .hidden { display: none !important; }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .zone-resultat-box {
+            background: #1a1b1e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-top: 25px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>📊 Analyseur Global (Primes & Frais)</h1>
+<div id="authScreen" class="container">
+    <div class="lock-icon">🔒</div>
+    <h1>Accès Sécurisé</h1>
+    <div class="form-group">
+        <label for="codeAcces">Clé d'accès requise :</label>
+        <input type="text" id="codeAcces" placeholder="Chargement des configurations..." oninput="detecterCode()" disabled style="text-align: center; font-size: 16px; letter-spacing: 2px;">
+    </div>
+    <div id="statusAuth" class="status"></div>
+</div>
+
+<div id="mainContent" class="container hidden">
+    <h1>📊 Analyseur Global Pro</h1>
     
-    <label for="codeAcces">🔑 Code d'accès Webhook :</label>
-    <input type="text" id="codeAcces" placeholder="Chargement des webhooks..." oninput="detecterCode()" disabled>
-
-    <div id="zoneSalons" class="hidden">
-        <label for="selectWebhookPrimes">📁 Salon de destination pour les Primes :</label>
-        <select id="selectWebhookPrimes"></select>
-
-        <label for="selectWebhookFrais">📁 Salon de destination pour les Frais :</label>
-        <select id="selectWebhookFrais"></select>
-
-        <label for="selectWebhookClassement">📁 Salon de destination pour le Classement :</label>
-        <select id="selectWebhookClassement"></select>
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('tab-config')">⚙️ Configuration</button>
+        <button class="tab-btn" onclick="switchTab('tab-primes')">💰 Primes Directeurs</button>
+        <button class="tab-btn" onclick="switchTab('tab-frais')">🏢 Frais Actuels</button>
+        <button class="tab-btn" onclick="switchTab('tab-calculs')">🧮 Calcul & Classement</button>
     </div>
 
     <label class="checkbox-container">
         <input type="checkbox" id="exclureZeros" checked>
-        Masquer les valeurs à 0 (valable pour primes et frais)
+        <span>Masquer automatiquement les valeurs égales à 0 (Primes & Frais)</span>
     </label>
 
-    <h2>Section 1 : Primes Directeurs</h2>
-    <label for="primeMaxBase">💰 Prime Max par poste (ex: 5M, 10G, 5000000) :</label>
-    <input type="text" id="primeMaxBase" placeholder="Laissez vide pour désactiver le contrôle">
+    <div id="tab-config" class="tab-content active">
+        <h2>⚙️ Configuration des Salons de Destination</h2>
+        <p class="input-desc">Vérifiez les salons configurés automatiquement via votre clé d'accès.</p>
+        
+        <div class="form-group">
+            <label for="selectWebhookPrimes">📁 Salon des Primes :</label>
+            <select id="selectWebhookPrimes"></select>
+        </div>
 
-    <label for="grosTexte">📝 Coller le tableau des Primes ici :</label>
-    <textarea id="grosTexte" placeholder="Filiale    Poste    Directeur    Prime Max    Prime..."></textarea>
-    <button id="btnEnvoyerPrimes" onclick="traiterEtEnvoyerPrimes()">🚀 Analyser et Envoyer les Primes</button>
+        <div class="form-group">
+            <label for="selectWebhookFrais">📁 Salon des Frais :</label>
+            <select id="selectWebhookFrais"></select>
+        </div>
 
-    <h2>Section 2 : Frais de Gestion Filiales</h2>
-    <label for="texteFrais">🏢 Coller le tableau des Frais de Gestion ici :</label>
-    <textarea id="texteFrais" placeholder="Filiale    Frais de gestion&#10;Patrimonia-E.C.T    0&#10;Patrimonia-Isabelle62    656300000000000000..."></textarea>
-    <button id="btnEnvoyerFrais" class="btn-frais" onclick="traiterEtEnvoyerFrais()">🚀 Analyser et Envoyer les Frais</button>
-
-    <h2>Section 3 : Calcul des Frais de Gestion (% du Résultat d'exploitation)</h2>
-    <label for="texteResultatsFiliales">📈 Coller le tableau des résultats (Filiale, Trésorerie, Résultat d'exploitation, Résultat NET, Bénéfices ou pertes) :</label>
-    <textarea id="texteResultatsFiliales" placeholder="Filiale    Trésorerie    Résultat d'exploitation    Résultat NET    Bénéfices ou pertes&#10;Patrimonia-Exemple    1000000    500000    300000    300000"></textarea>
-
-    <label for="pourcentageFrais">🎯 Pourcentage du Résultat d'exploitation à appliquer :</label>
-    <input type="text" id="pourcentageFrais" placeholder="Ex : 15 (pour 15%)">
-
-    <button id="btnCalculerFrais" class="btn-calcul" onclick="calculerFraisParPourcentage()">🧮 Calculer les Frais de Gestion</button>
-
-    <div id="zoneResultatCalcul" class="hidden">
-        <label for="resultatFraisCalcules">✅ Résultat prêt à être collé dans la fenêtre "Gestion" (format {nom_filiale}{TAB}{frais_de_gestion}) :</label>
-        <textarea id="resultatFraisCalcules" readonly></textarea>
-        <button id="btnCopierFrais" onclick="copierResultatFrais()">📋 Copier le résultat</button>
-        <button id="btnInsererFrais" class="btn-secondaire" onclick="insererDansChampFrais()">➡️ Insérer dans le champ "Frais de gestion" (Section 2)</button>
+        <div class="form-group">
+            <label for="selectWebhookClassement">📁 Salon du Classement :</label>
+            <select id="selectWebhookClassement"></select>
+        </div>
     </div>
 
-    <h2>Section 4 : Classement par Résultat d'exploitation</h2>
-    <label style="font-weight:normal;color:#b9bbbe;font-size:13px;">Utilise le même tableau collé juste au-dessus (Section 3).</label>
-    <button id="btnEnvoyerClassement" class="btn-calcul" onclick="genererEtEnvoyerClassement()">🏆 Générer et Envoyer le Classement</button>
+    <div id="tab-primes" class="tab-content">
+        <h2>💰 Analyse des Primes Directeurs</h2>
+        
+        <div class="form-group">
+            <label for="primeMaxBase">Plafond de Prime Max par poste :</label>
+            <p class="input-desc">Ex: 5M, 10G, 5000000. Laissez vide pour désactiver le contrôle.</p>
+            <input type="text" id="primeMaxBase" placeholder="Ex: 5M">
+        </div>
+
+        <div class="form-group">
+            <label for="grosTexte">Données du tableau des Primes :</label>
+            <textarea id="grosTexte" placeholder="Collez les lignes ici (Filiale   Poste   Directeur   Prime...)"></textarea>
+        </div>
+
+        <button id="btnEnvoyerPrimes" onclick="traiterEtEnvoyerPrimes()">🚀 Analyser et Envoyer sur Discord</button>
+    </div>
+
+    <div id="tab-frais" class="tab-content">
+        <h2>🏢 Frais de Gestion Filiales</h2>
+        
+        <div class="form-group">
+            <label for="texteFrais">Données du tableau des Frais de Gestion :</label>
+            <textarea id="texteFrais" placeholder="Filiale    Frais de gestion&#10;Patrimonia-E.C.T    0&#10;Patrimonia-Isabelle62    656300000000..."></textarea>
+        </div>
+
+        <button id="btnEnvoyerFrais" class="btn-frais" onclick="traiterEtEnvoyerFrais()">🚀 Analyser et Envoyer sur Discord</button>
+    </div>
+
+    <div id="tab-calculs" class="tab-content">
+        <h2>🧮 Calculateur de Frais (% Exploitation) & Classement</h2>
+        
+        <div class="form-group">
+            <label for="texteResultatsFiliales">Tableau complet des résultats des filiales :</label>
+            <p class="input-desc">Doit contenir l'ordre : Filiale, Trésorerie, Résultat d'exploitation, Résultat NET, Bénéfices/pertes.</p>
+            <textarea id="texteResultatsFiliales" placeholder="Filiale    Trésorerie    Résultat d'exploitation    Résultat NET..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="pourcentageFrais">Pourcentage à appliquer sur le Résultat d'exploitation :</label>
+            <input type="text" id="pourcentageFrais" placeholder="Ex : 15 (pour 15%)" style="max-width: 200px;">
+        </div>
+
+        <div class="grid-2">
+            <button id="btnCalculerFrais" class="btn-calcul" onclick="calculerFraisParPourcentage()">🧮 Calculer les Frais</button>
+            <button id="btnEnvoyerClassement" class="btn-secondaire" onclick="genererEtEnvoyerClassement()">🏆 Générer & Envoyer le Classement</button>
+        </div>
+
+        <div id="zoneResultatCalcul" class="zone-resultat-box hidden">
+            <label for="resultatFraisCalcules">✅ Résultat au format d'importation {nom}{TAB}{frais} :</label>
+            <textarea id="resultatFraisCalcules" readonly style="min-height: 100px; background-color: #111214;"></textarea>
+            
+            <div class="grid-2" style="margin-top: 12px;">
+                <button id="btnCopierFrais" onclick="copierResultatFrais()">📋 Copier le résultat</button>
+                <button id="btnInsererFrais" class="btn-secondaire" onclick="insererDansChampFrais()">➡️ Injecter dans l'onglet Frais</button>
+            </div>
+        </div>
+    </div>
 
     <div id="statusBox" class="status"></div>
 </div>
 
 <script>
-// --- CHARGEMENT DES WEBHOOKS DEPUIS GITHUB ---
-// Les URLs de webhook ne sont plus codées en dur ici : elles vivent dans
-// webhook.json, géré depuis Discord via la commande /webhook. Le bot (sur
-// Katabump) pousse ce fichier directement sur ce dépôt GitHub à chaque
-// modification ; cette page va simplement le relire depuis
-// raw.githubusercontent.com (en HTTPS, donc pas de souci de contenu mixte).
-//
-// ⚠️ À FAIRE : remplace OWNER et REPO ci-dessous par ton pseudo GitHub et le
-// nom du dépôt où se trouve ce site (celui utilisé pour GITHUB_REPO côté bot).
-// Si webhook.json n'est pas à la racine du dépôt, adapte aussi le chemin.
-const URL_WEBHOOKS_JSON = "https://raw.githubusercontent.com/Lordodol/prime-bot/main/webhook.json";
+// --- LOGIQUE D'ONGLETS ---
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+    
+    // On efface le statut de l'ancienne action pour nettoyer l'écran
+    const statusBox = document.getElementById("statusBox");
+    statusBox.style.display = "none";
+}
 
+// --- CONFIGURATION WEBHOOKS & SCRIPT D'ORIGINE ---
+const URL_WEBHOOKS_JSON = "https://raw.githubusercontent.com/Lordodol/prime-bot/main/webhook.json";
 let DICTIONNAIRE_WEBHOOKS = {};
 
 async function chargerDictionnaireWebhooks() {
     const champCode = document.getElementById("codeAcces");
+    const statusAuth = document.getElementById("statusAuth");
     try {
-        // Le paramètre "?t=" force le navigateur à ne pas réutiliser une
-        // version en cache. Note : raw.githubusercontent.com est aussi mis
-        // en cache côté GitHub (~5 minutes), donc un /webhook ajouter tout
-        // récent peut mettre jusqu'à quelques minutes à apparaître ici.
         const reponse = await fetch(`${URL_WEBHOOKS_JSON}?t=${Date.now()}`, { cache: "no-store" });
         if (!reponse.ok) throw new Error(`Statut HTTP ${reponse.status}`);
         DICTIONNAIRE_WEBHOOKS = await reponse.json();
 
         champCode.disabled = false;
-        champCode.placeholder = "Entrez votre code secret (ex: curly)";
-
-        // Si l'utilisateur avait déjà tapé un code pendant le chargement.
-        if (champCode.value.trim()) {
-            detecterCode();
-        }
+        champCode.placeholder = "Entrez votre code secret";
+        
+        if (champCode.value.trim()) detecterCode();
     } catch (e) {
         console.error("❌ Impossible de charger webhook.json :", e);
-        champCode.placeholder = "⚠️ Erreur de chargement des webhooks";
-        afficherStatus("❌ Impossible de charger la liste des webhooks. Réessaie plus tard.", "error");
+        champCode.placeholder = "Erreur de chargement";
+        statusAuth.innerText = "❌ Impossible de charger la liste des webhooks distants.";
+        statusAuth.className = "status error";
+        statusAuth.style.display = "block";
     }
 }
 
@@ -270,9 +480,12 @@ function convertirEnBigInt(chaine) {
     return chiffresSeuls ? BigInt(chiffresSeuls) : 0n;
 }
 
+// Système de déverrouillage mis à jour
 function detecterCode() {
     const code = document.getElementById("codeAcces").value.trim();
-    const zoneSalons = document.getElementById("zoneSalons");
+    const authScreen = document.getElementById("authScreen");
+    const mainContent = document.getElementById("mainContent");
+    
     const selectWebhookPrimes = document.getElementById("selectWebhookPrimes");
     const selectWebhookFrais = document.getElementById("selectWebhookFrais");
     const selectWebhookClassement = document.getElementById("selectWebhookClassement");
@@ -282,33 +495,25 @@ function detecterCode() {
         selectWebhookFrais.innerHTML = ""; 
         selectWebhookClassement.innerHTML = "";
         
-        let aDesPrimes = false;
-        let aDesFrais = false;
-        let aDesClassement = false;
+        let aDesPrimes = false, aDesFrais = false, aDesClassement = false;
 
         DICTIONNAIRE_WEBHOOKS[code].forEach((salon) => {
             const nomMinuscule = salon.nom.toLowerCase();
-            
             if (nomMinuscule.startsWith("prime")) {
                 const opt = document.createElement("option");
-                opt.value = salon.url;
-                opt.textContent = salon.nom;
+                opt.value = salon.url; opt.textContent = salon.nom;
                 selectWebhookPrimes.appendChild(opt);
                 aDesPrimes = true;
             }
-            
             if (nomMinuscule.startsWith("fdg") || nomMinuscule.startsWith("frais")) {
                 const opt = document.createElement("option");
-                opt.value = salon.url;
-                opt.textContent = salon.nom;
+                opt.value = salon.url; opt.textContent = salon.nom;
                 selectWebhookFrais.appendChild(opt);
                 aDesFrais = true;
             }
-
             if (nomMinuscule.includes("classement")) {
                 const opt = document.createElement("option");
-                opt.value = salon.url;
-                opt.textContent = salon.nom;
+                opt.value = salon.url; opt.textContent = salon.nom;
                 selectWebhookClassement.appendChild(opt);
                 aDesClassement = true;
             }
@@ -333,12 +538,10 @@ function detecterCode() {
             selectWebhookClassement.innerHTML = "<option value=''>-- Aucun salon 'classement' trouvé --</option>";
         }
         
-        zoneSalons.classList.remove("hidden"); 
-    } else {
-        zoneSalons.classList.add("hidden"); 
-        selectWebhookPrimes.innerHTML = "";
-        selectWebhookFrais.innerHTML = "";
-        selectWebhookClassement.innerHTML = "";
+        // Transférer la valeur de la clé vers l'intérieur si besoin mais l'important est de switcher d'écran
+        authScreen.classList.add("hidden");
+        mainContent.classList.remove("hidden");
+        afficherStatus("🔓 Clé d'accès validée. Bienvenue !", "success");
     }
 }
 
@@ -367,7 +570,7 @@ function formaterGrandNombre(chaineNombre) {
     return BigInt(nette).toLocaleString('fr-FR');
 }
 
-// --- LOGIQUE POUR LES PRIMES ---
+// --- TRAITEMENT DES PRIMES ---
 async function traiterEtEnvoyerPrimes() {
     const selectWebhookPrimes = document.getElementById("selectWebhookPrimes");
     const codeAcces = document.getElementById("codeAcces").value.trim();
@@ -376,22 +579,18 @@ async function traiterEtEnvoyerPrimes() {
     const exclureZeros = document.getElementById("exclureZeros").checked;
     const btn = document.getElementById("btnEnvoyerPrimes");
 
-    let webhookUrl = "";
-    if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces] && selectWebhookPrimes.value) {
-        webhookUrl = selectWebhookPrimes.value;
-    } else {
-        afficherStatus("❌ Veuillez saisir un code d'accès valide.", "error");
+    if (!selectWebhookPrimes.value) {
+        afficherStatus("❌ Salon de destination introuvable.", "error");
         return;
     }
-
     if (!grosTexte) {
-        afficherStatus("❌ Veuillez coller le tableau des primes.", "error");
+        afficherStatus("❌ Veuillez coller les données du tableau des primes.", "error");
         return;
     }
 
     let limiteBase = convertirEnBigInt(primeMaxSaisie);
     btn.disabled = true;
-    afficherStatus("⏳ Analyse des primes...", "");
+    afficherStatus("⏳ Analyse du fichier de primes en cours...", "info");
 
     try {
         const lines = grosTexte.split("\n");
@@ -439,7 +638,7 @@ async function traiterEtEnvoyerPrimes() {
                 }
             }
             if (erreursPlafond.length > 0) {
-                afficherStatus(`🛑 ENVOI BLOQUÉ - PLAFOND ATTEINT :\n\n${erreursPlafond.join("\n")}`, "error");
+                afficherStatus(`🛑 ENVOI BLOQUÉ - UN PLAFOND EST DÉPASSÉ :\n\n${erreursPlafond.join("\n")}`, "error");
                 btn.disabled = false;
                 return;
             }
@@ -468,37 +667,32 @@ async function traiterEtEnvoyerPrimes() {
 
         if (messageActuel && messageActuel.length > 45) messagesAEnvoyer.push(messageActuel);
 
-        await envoyerSurDiscord(webhookUrl, messagesAEnvoyer, "Gestionnaire des Primes");
-        afficherStatus("✅ Primes envoyées avec succès !", "success");
+        await envoyerSurDiscord(selectWebhookPrimes.value, messagesAEnvoyer, "Gestionnaire des Primes");
+        afficherStatus("✅ Rapport de primes traité et expédié sur Discord avec succès !", "success");
         document.getElementById("grosTexte").value = "";
     } catch (e) {
-        afficherStatus(`❌ Erreur Primes : ${e.message}`, "error");
+        afficherStatus(`❌ Erreur Système Primes : ${e.message}`, "error");
     } finally { btn.disabled = false; }
 }
 
-// --- LOGIQUE POUR LES FRAIS DE GESTION ---
+// --- TRAITEMENT DES FRAIS ---
 async function traiterEtEnvoyerFrais() {
     const selectWebhookFrais = document.getElementById("selectWebhookFrais");
-    const codeAcces = document.getElementById("codeAcces").value.trim();
     const texteFrais = document.getElementById("texteFrais").value.trim();
     const exclureZeros = document.getElementById("exclureZeros").checked;
     const btn = document.getElementById("btnEnvoyerFrais");
 
-    let webhookUrl = "";
-    if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces] && selectWebhookFrais.value) {
-        webhookUrl = selectWebhookFrais.value;
-    } else {
-        afficherStatus("❌ Veuillez saisir un code d'accès valide.", "error");
+    if (!selectWebhookFrais.value) {
+        afficherStatus("❌ Salon de destination introuvable.", "error");
         return;
     }
-
     if (!texteFrais) {
-        afficherStatus("❌ Veuillez coller le tableau des Frais de Gestion.", "error");
+        afficherStatus("❌ Le champ de texte des frais est vide.", "error");
         return;
     }
 
     btn.disabled = true;
-    afficherStatus("⏳ Analyse des frais de gestion...", "");
+    afficherStatus("⏳ Analyse des frais financiers...", "info");
 
     try {
         const lines = texteFrais.split("\n");
@@ -530,7 +724,6 @@ async function traiterEtEnvoyerFrais() {
         }
 
         let listeFraisTriees = Array.from(fraisParFiliale.entries()).sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0));
-
         let messageActuel = "🏢 **Rapport des Frais de Gestion des Filiales :**\n\n";
         const messagesAEnvoyer = [];
 
@@ -557,22 +750,20 @@ async function traiterEtEnvoyerFrais() {
         if (messageActuel && messageActuel.length > 55) messagesAEnvoyer.push(messageActuel);
 
         if (messagesAEnvoyer.length === 0 || (messagesAEnvoyer.length === 1 && sommeTotaleFrais === 0n && exclureZeros)) {
-            afficherStatus("⚠️ Rien à envoyer (toutes les valeurs sont à 0 ou tableau vide).", "error");
+            afficherStatus("⚠️ Aucune donnée pertinente à transmettre (Valeurs nulles).", "error");
             btn.disabled = false;
             return;
         }
 
-        await envoyerSurDiscord(webhookUrl, messagesAEnvoyer, "Gestionnaire Financier");
-        afficherStatus("✅ Frais de gestion envoyés avec succès !", "success");
+        await envoyerSurDiscord(selectWebhookFrais.value, messagesAEnvoyer, "Gestionnaire Financier");
+        afficherStatus("✅ Les frais de gestion ont été consolidés et envoyés !", "success");
         document.getElementById("texteFrais").value = "";
     } catch (e) {
-        afficherStatus(`❌ Erreur Frais : ${e.message}`, "error");
+        afficherStatus(`❌ Erreur Système Frais : ${e.message}`, "error");
     } finally { btn.disabled = false; }
 }
 
-// --- SECTION 3 : CALCUL DES FRAIS DE GESTION PAR POURCENTAGE ---
-
-// Convertit une chaîne en BigInt en conservant le signe (négatif possible pour une perte)
+// --- LOGIQUE CALCULS ET CALCULATEURS PAR % ---
 function convertirEnBigIntSigne(chaine) {
     let s = chaine.trim();
     if (!s) return 0n;
@@ -582,7 +773,6 @@ function convertirEnBigIntSigne(chaine) {
     return negatif ? -valeur : valeur;
 }
 
-// Analyse le tableau collé : Filiale | Trésorerie | Résultat d'exploitation | Résultat NET | Bénéfices ou pertes
 function analyserTableauResultats(texte) {
     const lignes = texte.split("\n");
     const resultats = [];
@@ -594,12 +784,9 @@ function analyserTableauResultats(texte) {
 
         const tokens = ligne.split(/\s+/).filter(t => t.length > 0);
         if (tokens.length === 0) continue;
-
-        // Ignore la ligne d'en-tête (ex: "Filiale Trésorerie Résultat d'exploitation ...")
         if (tokens[0].toLowerCase() === "filiale") continue;
-
-        // Les 4 dernières valeurs sont les montants, le reste forme le nom de la filiale
         if (tokens.length < 5) continue;
+
         const montants = tokens.slice(-4);
         const filiale = tokens.slice(0, tokens.length - 4).join(" ").trim();
         if (!filiale) continue;
@@ -615,9 +802,8 @@ function analyserTableauResultats(texte) {
     return resultats;
 }
 
-// Applique un pourcentage (peut être décimal, ex: 12.5) à une valeur BigInt, en conservant le signe
 function appliquerPourcentage(valeurBigInt, pourcentageFloat) {
-    const PRECISION = 1000000n; // 6 décimales de précision sur le pourcentage
+    const PRECISION = 1000000n;
     const pourcentageEntier = BigInt(Math.round(pourcentageFloat * 1000000));
     return (valeurBigInt * pourcentageEntier) / (100n * PRECISION);
 }
@@ -629,23 +815,23 @@ function calculerFraisParPourcentage() {
     const sortieTextarea = document.getElementById("resultatFraisCalcules");
 
     if (!texte) {
-        afficherStatus("❌ Veuillez coller le tableau des résultats (Filiale, Trésorerie, Résultat d'exploitation...).", "error");
+        afficherStatus("❌ Veuillez renseigner le tableau complet des résultats dans la zone requise.", "error");
         return;
     }
     if (!pourcentageStr) {
-        afficherStatus("❌ Veuillez indiquer un pourcentage à appliquer.", "error");
+        afficherStatus("❌ Indiquez une valeur de taux (%) à appliquer.", "error");
         return;
     }
 
     const pourcentage = parseFloat(pourcentageStr.replace(",", "."));
     if (isNaN(pourcentage)) {
-        afficherStatus("❌ Pourcentage invalide.", "error");
+        afficherStatus("❌ Valeur numérique du pourcentage erronée.", "error");
         return;
     }
 
     const donnees = analyserTableauResultats(texte);
     if (donnees.length === 0) {
-        afficherStatus("❌ Aucune ligne valide détectée dans le tableau collé.", "error");
+        afficherStatus("❌ Format de ligne illisible ou en-tête manquante dans votre import.", "error");
         zoneResultat.classList.add("hidden");
         return;
     }
@@ -657,25 +843,20 @@ function calculerFraisParPourcentage() {
 
     sortieTextarea.value = lignesSortie.join("\n");
     zoneResultat.classList.remove("hidden");
-    afficherStatus(`✅ ${donnees.length} filiale(s) calculée(s) avec ${pourcentage}% du Résultat d'exploitation. Copiez le résultat pour l'importer.`, "success");
+    afficherStatus(`✅ Modélisation terminée. ${donnees.length} entités calculées à ${pourcentage}%.`, "success");
 }
 
 async function copierResultatFrais() {
     const texte = document.getElementById("resultatFraisCalcules").value;
     if (!texte) return;
-
     try {
         await navigator.clipboard.writeText(texte);
-        afficherStatus("📋 Résultat copié dans le presse-papiers ! Collez-le dans la fenêtre d'import des Frais de Gestion.", "success");
+        afficherStatus("📋 Texte copié dans votre presse-papiers avec succès !", "success");
     } catch (e) {
         const zone = document.getElementById("resultatFraisCalcules");
         zone.select();
-        try {
-            document.execCommand("copy");
-            afficherStatus("📋 Résultat copié (méthode de secours).", "success");
-        } catch (e2) {
-            afficherStatus("❌ Impossible de copier automatiquement. Sélectionnez le texte et copiez-le manuellement.", "error");
-        }
+        document.execCommand("copy");
+        afficherStatus("📋 Copie manuelle requise sur votre navigateur.", "success");
     }
 }
 
@@ -684,40 +865,32 @@ function insererDansChampFrais() {
     if (!texteCalcule) return;
 
     document.getElementById("texteFrais").value = "Filiale\tFrais de gestion\n" + texteCalcule;
-    afficherStatus("➡️ Résultat inséré dans le champ Frais de Gestion (Section 2). Vous pouvez maintenant l'envoyer.", "success");
-    document.getElementById("texteFrais").scrollIntoView({ behavior: "smooth", block: "center" });
+    afficherStatus("➡️ Données injectées. Rendez-vous dans l'onglet 'Frais Actuels' pour l'envoi.", "success");
+    switchTab('tab-frais');
 }
 
-// --- SECTION 4 : CLASSEMENT PAR RÉSULTAT D'EXPLOITATION ---
+// --- CLASSEMENT ---
 async function genererEtEnvoyerClassement() {
     const selectWebhookClassement = document.getElementById("selectWebhookClassement");
-    const codeAcces = document.getElementById("codeAcces").value.trim();
     const texte = document.getElementById("texteResultatsFiliales").value.trim();
     const btn = document.getElementById("btnEnvoyerClassement");
 
-    let webhookUrl = "";
-    if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces] && selectWebhookClassement.value) {
-        webhookUrl = selectWebhookClassement.value;
-    } else if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces]) {
-        afficherStatus("❌ Aucun salon contenant \"classement\" dans son nom n'est configuré pour ce code d'accès.", "error");
-        return;
-    } else {
-        afficherStatus("❌ Veuillez saisir un code d'accès valide.", "error");
+    if (!selectWebhookClassement.value) {
+        afficherStatus("❌ Le salon dédié aux classements n'est pas configuré pour cette clé.", "error");
         return;
     }
-
     if (!texte) {
-        afficherStatus("❌ Veuillez coller le tableau des résultats dans la Section 3 ci-dessus.", "error");
+        afficherStatus("❌ Insérez d'abord des lignes de données dans le champ de calcul.", "error");
         return;
     }
 
     btn.disabled = true;
-    afficherStatus("⏳ Génération du classement...", "");
+    afficherStatus("⏳ Structuration du tableau d'honneur...", "info");
 
     try {
         const donnees = analyserTableauResultats(texte);
         if (donnees.length === 0) {
-            afficherStatus("❌ Aucune ligne valide détectée dans le tableau collé.", "error");
+            afficherStatus("❌ Structure de données introuvable pour le classement.", "error");
             btn.disabled = false;
             return;
         }
@@ -736,32 +909,26 @@ async function genererEtEnvoyerClassement() {
             const rangAffiche = index < 3 ? medailles[index] : `${index + 1}.`;
             const estNegatif = d.resultatExploitation < 0n;
             const valeurAbsolue = estNegatif ? -d.resultatExploitation : d.resultatExploitation;
-            const montantFormate = valeurAbsolue === 0n
-                ? "0 EØ"
-                : `${formaterGrandNombre(valeurAbsolue.toString())}Ø`;
+            const montantFormate = valeurAbsolue === 0n ? "0 EØ" : `${formaterGrandNombre(valeurAbsolue.toString())}Ø`;
             const signe = estNegatif ? "-" : "";
             const ligneFormat = `${rangAffiche} **${d.filiale}**\n📊 Re : **${signe}${montantFormate}**\n\n`;
 
             if ((messageActuel + ligneFormat).length > 1900) {
                 messagesAEnvoyer.push(messageActuel);
                 messageActuel = "🔄 **Suite du classement :**\n\n" + ligneFormat;
-            } else {
-                messageActuel += ligneFormat;
-            }
+            } else messageActuel += ligneFormat;
         });
 
         if (messageActuel.trim()) messagesAEnvoyer.push(messageActuel);
 
-        await envoyerSurDiscord(webhookUrl, messagesAEnvoyer, "Classement des Filiales");
-        afficherStatus(`✅ Classement envoyé avec succès ! (${donnees.length} filiale(s))`, "success");
+        await envoyerSurDiscord(selectWebhookClassement.value, messagesAEnvoyer, "Classement des Filiales");
+        afficherStatus(`🏆 Classement général publié avec succès (${donnees.length} filiales) !`, "success");
     } catch (e) {
-        afficherStatus(`❌ Erreur Classement : ${e.message}`, "error");
-    } finally {
-        btn.disabled = false;
-    }
+        afficherStatus(`❌ Échec d'envoi du classement : ${e.message}`, "error");
+    } finally { btn.disabled = false; }
 }
 
-// Fonction globale d'envoi
+// Fonction globale d'envoi Webhook
 async function envoyerSurDiscord(url, paquetsMessages, nomRobot) {
     for (const msgContent of paquetsMessages) {
         const reponse = await fetch(url, {
@@ -783,8 +950,6 @@ function afficherStatus(message, type) {
     statusBox.innerText = message;
     statusBox.className = "status " + type;
     statusBox.style.display = "block";
-    if(type === "success") statusBox.style.backgroundColor = "#2e7d32";
-    if(type === "error") statusBox.style.backgroundColor = "#d32f2f";
 }
 </script>
 
