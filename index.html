@@ -99,6 +99,22 @@
         button.btn-frais:hover {
             background-color: #1a6535;
         }
+        button.btn-calcul {
+            background-color: #e67e22;
+        }
+        button.btn-calcul:hover {
+            background-color: #ba6418;
+        }
+        button.btn-secondaire {
+            background-color: #4f545c;
+        }
+        button.btn-secondaire:hover {
+            background-color: #3d4147;
+        }
+        #resultatFraisCalcules {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background-color: #202225;
+        }
         button:hover {
             background-color: #4752c4;
         }
@@ -126,7 +142,7 @@
     <h1>📊 Analyseur Global (Primes & Frais)</h1>
     
     <label for="codeAcces">🔑 Code d'accès Webhook :</label>
-    <input type="text" id="codeAcces" placeholder="Entrez votre code secret (ex: curly)" oninput="detecterCode()">
+    <input type="text" id="codeAcces" placeholder="Chargement des webhooks..." oninput="detecterCode()" disabled>
 
     <div id="zoneSalons" class="hidden">
         <label for="selectWebhookPrimes">📁 Salon de destination pour les Primes :</label>
@@ -134,6 +150,9 @@
 
         <label for="selectWebhookFrais">📁 Salon de destination pour les Frais :</label>
         <select id="selectWebhookFrais"></select>
+
+        <label for="selectWebhookClassement">📁 Salon de destination pour le Classement :</label>
+        <select id="selectWebhookClassement"></select>
     </div>
 
     <label class="checkbox-container">
@@ -154,28 +173,70 @@
     <textarea id="texteFrais" placeholder="Filiale    Frais de gestion&#10;Patrimonia-E.C.T    0&#10;Patrimonia-Isabelle62    656300000000000000..."></textarea>
     <button id="btnEnvoyerFrais" class="btn-frais" onclick="traiterEtEnvoyerFrais()">🚀 Analyser et Envoyer les Frais</button>
 
+    <h2>Section 3 : Calcul des Frais de Gestion (% du Résultat d'exploitation)</h2>
+    <label for="texteResultatsFiliales">📈 Coller le tableau des résultats (Filiale, Trésorerie, Résultat d'exploitation, Résultat NET, Bénéfices ou pertes) :</label>
+    <textarea id="texteResultatsFiliales" placeholder="Filiale    Trésorerie    Résultat d'exploitation    Résultat NET    Bénéfices ou pertes&#10;Patrimonia-Exemple    1000000    500000    300000    300000"></textarea>
+
+    <label for="pourcentageFrais">🎯 Pourcentage du Résultat d'exploitation à appliquer :</label>
+    <input type="text" id="pourcentageFrais" placeholder="Ex : 15 (pour 15%)">
+
+    <button id="btnCalculerFrais" class="btn-calcul" onclick="calculerFraisParPourcentage()">🧮 Calculer les Frais de Gestion</button>
+
+    <div id="zoneResultatCalcul" class="hidden">
+        <label for="resultatFraisCalcules">✅ Résultat prêt à être collé dans la fenêtre "Gestion" (format {nom_filiale}{TAB}{frais_de_gestion}) :</label>
+        <textarea id="resultatFraisCalcules" readonly></textarea>
+        <button id="btnCopierFrais" onclick="copierResultatFrais()">📋 Copier le résultat</button>
+        <button id="btnInsererFrais" class="btn-secondaire" onclick="insererDansChampFrais()">➡️ Insérer dans le champ "Frais de gestion" (Section 2)</button>
+    </div>
+
+    <h2>Section 4 : Classement par Résultat d'exploitation</h2>
+    <label style="font-weight:normal;color:#b9bbbe;font-size:13px;">Utilise le même tableau collé juste au-dessus (Section 3).</label>
+    <button id="btnEnvoyerClassement" class="btn-calcul" onclick="genererEtEnvoyerClassement()">🏆 Générer et Envoyer le Classement</button>
+
     <div id="statusBox" class="status"></div>
 </div>
 
 <script>
-// --- CONFIGURATION DES CODES ET DES OPTIONS DE WEBHOOKS ---
-const DICTIONNAIRE_WEBHOOKS = {
-    "curly": [
-        { nom: "Prime Patrimonia", url: "https://discordapp.com/api/webhooks/1524339415567171664/jI_sV3e13fIWATIFPzIc4qMqI3gBZarIi_vXe2lUSYWj8UFothtVGR49NaaM7b1QYzcx" },
-        { nom: "FDG Patrimonia", url: "https://discordapp.com/api/webhooks/1524356475227607070/s-XpdzgUyTYYCAdiydlJ585Qu5NK8N22F3vVcH-GJR8B956n1Sg9IPBIjuDqfnyNn3Nr" },
-        { nom: "Prime Apero-folie", url: "https://discordapp.com/api/webhooks/1524304609924091935/L2apDhakQQpGr3Viaa5U8ukGntecdsaedXpLt18S8wz468v9kaO6CBr9UD45p__7CpZJ" },
-        { nom: "FDG Apero-folie", url: "https://discordapp.com/api/webhooks/1524412314210795632/RiLe38ht3bGTNU876DziXPrZzyS8Ol6KAg1LCmD6rmHdIWWz7IsI_bKFtM5kXHjRsDl_" },
-        { nom: "Prime Apero-partie", url: "https://discordapp.com/api/webhooks/1524412541604728872/N8_K1C05cer-dakuFs2HjL2Zntj62uJqrLdHGDjLeGvwXzUAxQePS4e3HvX5_oFqtQdg" },
-        { nom: "FDG Apero-partie", url: "https://discordapp.com/api/webhooks/1524413015359881340/BYsugD9oCYqm5OM2yasbmMC9u2X66AV8egQyoU31QFI9dxEBKK2dqseF4oyiEHQnuR9x" }
-    ],
-    "creedex77": [
-        { nom: "Prime elchacha", url: "https://discordapp.com/api/webhooks/1524372935685705800/zaHhrNAdZOcYbihXVDwwzN47lMxi_aMlDWNO6U0CAIjMmk_THMRVIzyE88pmqGIvhgBg" }
-    ],
-    "junior": [
-        { nom: "Prime capital", url: "https://discord.com/api/webhooks/1518563990316515519/jKKxKGacgy0vuHsZ2wrdVzJbHMwbcy_eMD489TXvXnIv0Az2ku8OXLmpxyl5PRePTfdU" },
-        { nom: "FDG capital", url: "https://discord.com/api/webhooks/1524497137872801833/8IcbDYv8spI9YUX-AzSq8sNLKQjx74ijhM5n60e8MwH1lqAx40RjpSBoRme74-UwPjS-" }
-    ]
-};
+// --- CHARGEMENT DES WEBHOOKS DEPUIS GITHUB ---
+// Les URLs de webhook ne sont plus codées en dur ici : elles vivent dans
+// webhook.json, géré depuis Discord via la commande /webhook. Le bot (sur
+// Katabump) pousse ce fichier directement sur ce dépôt GitHub à chaque
+// modification ; cette page va simplement le relire depuis
+// raw.githubusercontent.com (en HTTPS, donc pas de souci de contenu mixte).
+//
+// ⚠️ À FAIRE : remplace OWNER et REPO ci-dessous par ton pseudo GitHub et le
+// nom du dépôt où se trouve ce site (celui utilisé pour GITHUB_REPO côté bot).
+// Si webhook.json n'est pas à la racine du dépôt, adapte aussi le chemin.
+const URL_WEBHOOKS_JSON = "https://raw.githubusercontent.com/OWNER/REPO/main/webhook.json";
+
+let DICTIONNAIRE_WEBHOOKS = {};
+
+async function chargerDictionnaireWebhooks() {
+    const champCode = document.getElementById("codeAcces");
+    try {
+        // Le paramètre "?t=" force le navigateur à ne pas réutiliser une
+        // version en cache. Note : raw.githubusercontent.com est aussi mis
+        // en cache côté GitHub (~5 minutes), donc un /webhook ajouter tout
+        // récent peut mettre jusqu'à quelques minutes à apparaître ici.
+        const reponse = await fetch(`${URL_WEBHOOKS_JSON}?t=${Date.now()}`, { cache: "no-store" });
+        if (!reponse.ok) throw new Error(`Statut HTTP ${reponse.status}`);
+        DICTIONNAIRE_WEBHOOKS = await reponse.json();
+
+        champCode.disabled = false;
+        champCode.placeholder = "Entrez votre code secret (ex: curly)";
+
+        // Si l'utilisateur avait déjà tapé un code pendant le chargement.
+        if (champCode.value.trim()) {
+            detecterCode();
+        }
+    } catch (e) {
+        console.error("❌ Impossible de charger webhook.json :", e);
+        champCode.placeholder = "⚠️ Erreur de chargement des webhooks";
+        afficherStatus("❌ Impossible de charger la liste des webhooks. Réessaie plus tard.", "error");
+    }
+}
+
+chargerDictionnaireWebhooks();
 
 const CONFIG_UNITES = [
     { symbole: 'D', taille: 45 }, { symbole: 'N', taille: 42 }, { symbole: 'X', taille: 39 },
@@ -214,13 +275,16 @@ function detecterCode() {
     const zoneSalons = document.getElementById("zoneSalons");
     const selectWebhookPrimes = document.getElementById("selectWebhookPrimes");
     const selectWebhookFrais = document.getElementById("selectWebhookFrais");
+    const selectWebhookClassement = document.getElementById("selectWebhookClassement");
     
     if (DICTIONNAIRE_WEBHOOKS[code]) {
         selectWebhookPrimes.innerHTML = ""; 
         selectWebhookFrais.innerHTML = ""; 
+        selectWebhookClassement.innerHTML = "";
         
         let aDesPrimes = false;
         let aDesFrais = false;
+        let aDesClassement = false;
 
         DICTIONNAIRE_WEBHOOKS[code].forEach((salon) => {
             const nomMinuscule = salon.nom.toLowerCase();
@@ -240,6 +304,14 @@ function detecterCode() {
                 selectWebhookFrais.appendChild(opt);
                 aDesFrais = true;
             }
+
+            if (nomMinuscule.includes("classement")) {
+                const opt = document.createElement("option");
+                opt.value = salon.url;
+                opt.textContent = salon.nom;
+                selectWebhookClassement.appendChild(opt);
+                aDesClassement = true;
+            }
         });
 
         if (!aDesPrimes || !aDesFrais) {
@@ -256,12 +328,17 @@ function detecterCode() {
                 }
             });
         }
+
+        if (!aDesClassement) {
+            selectWebhookClassement.innerHTML = "<option value=''>-- Aucun salon 'classement' trouvé --</option>";
+        }
         
         zoneSalons.classList.remove("hidden"); 
     } else {
         zoneSalons.classList.add("hidden"); 
         selectWebhookPrimes.innerHTML = "";
         selectWebhookFrais.innerHTML = "";
+        selectWebhookClassement.innerHTML = "";
     }
 }
 
@@ -491,6 +568,197 @@ async function traiterEtEnvoyerFrais() {
     } catch (e) {
         afficherStatus(`❌ Erreur Frais : ${e.message}`, "error");
     } finally { btn.disabled = false; }
+}
+
+// --- SECTION 3 : CALCUL DES FRAIS DE GESTION PAR POURCENTAGE ---
+
+// Convertit une chaîne en BigInt en conservant le signe (négatif possible pour une perte)
+function convertirEnBigIntSigne(chaine) {
+    let s = chaine.trim();
+    if (!s) return 0n;
+    const negatif = s.startsWith('-');
+    if (negatif) s = s.slice(1);
+    const valeur = convertirEnBigInt(s);
+    return negatif ? -valeur : valeur;
+}
+
+// Analyse le tableau collé : Filiale | Trésorerie | Résultat d'exploitation | Résultat NET | Bénéfices ou pertes
+function analyserTableauResultats(texte) {
+    const lignes = texte.split("\n");
+    const resultats = [];
+
+    for (let i = 0; i < lignes.length; i++) {
+        let ligne = lignes[i].trim();
+        if (!ligne) continue;
+        ligne = ligne.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, " ");
+
+        const tokens = ligne.split(/\s+/).filter(t => t.length > 0);
+        if (tokens.length === 0) continue;
+
+        // Ignore la ligne d'en-tête (ex: "Filiale Trésorerie Résultat d'exploitation ...")
+        if (tokens[0].toLowerCase() === "filiale") continue;
+
+        // Les 4 dernières valeurs sont les montants, le reste forme le nom de la filiale
+        if (tokens.length < 5) continue;
+        const montants = tokens.slice(-4);
+        const filiale = tokens.slice(0, tokens.length - 4).join(" ").trim();
+        if (!filiale) continue;
+
+        resultats.push({
+            filiale: filiale,
+            tresorerie: convertirEnBigIntSigne(montants[0]),
+            resultatExploitation: convertirEnBigIntSigne(montants[1]),
+            resultatNet: convertirEnBigIntSigne(montants[2]),
+            beneficePerte: convertirEnBigIntSigne(montants[3])
+        });
+    }
+    return resultats;
+}
+
+// Applique un pourcentage (peut être décimal, ex: 12.5) à une valeur BigInt, en conservant le signe
+function appliquerPourcentage(valeurBigInt, pourcentageFloat) {
+    const PRECISION = 1000000n; // 6 décimales de précision sur le pourcentage
+    const pourcentageEntier = BigInt(Math.round(pourcentageFloat * 1000000));
+    return (valeurBigInt * pourcentageEntier) / (100n * PRECISION);
+}
+
+function calculerFraisParPourcentage() {
+    const texte = document.getElementById("texteResultatsFiliales").value.trim();
+    const pourcentageStr = document.getElementById("pourcentageFrais").value.trim();
+    const zoneResultat = document.getElementById("zoneResultatCalcul");
+    const sortieTextarea = document.getElementById("resultatFraisCalcules");
+
+    if (!texte) {
+        afficherStatus("❌ Veuillez coller le tableau des résultats (Filiale, Trésorerie, Résultat d'exploitation...).", "error");
+        return;
+    }
+    if (!pourcentageStr) {
+        afficherStatus("❌ Veuillez indiquer un pourcentage à appliquer.", "error");
+        return;
+    }
+
+    const pourcentage = parseFloat(pourcentageStr.replace(",", "."));
+    if (isNaN(pourcentage)) {
+        afficherStatus("❌ Pourcentage invalide.", "error");
+        return;
+    }
+
+    const donnees = analyserTableauResultats(texte);
+    if (donnees.length === 0) {
+        afficherStatus("❌ Aucune ligne valide détectée dans le tableau collé.", "error");
+        zoneResultat.classList.add("hidden");
+        return;
+    }
+
+    const lignesSortie = donnees.map(d => {
+        const frais = appliquerPourcentage(d.resultatExploitation, pourcentage);
+        return `${d.filiale}\t${frais.toString()}`;
+    });
+
+    sortieTextarea.value = lignesSortie.join("\n");
+    zoneResultat.classList.remove("hidden");
+    afficherStatus(`✅ ${donnees.length} filiale(s) calculée(s) avec ${pourcentage}% du Résultat d'exploitation. Copiez le résultat pour l'importer.`, "success");
+}
+
+async function copierResultatFrais() {
+    const texte = document.getElementById("resultatFraisCalcules").value;
+    if (!texte) return;
+
+    try {
+        await navigator.clipboard.writeText(texte);
+        afficherStatus("📋 Résultat copié dans le presse-papiers ! Collez-le dans la fenêtre d'import des Frais de Gestion.", "success");
+    } catch (e) {
+        const zone = document.getElementById("resultatFraisCalcules");
+        zone.select();
+        try {
+            document.execCommand("copy");
+            afficherStatus("📋 Résultat copié (méthode de secours).", "success");
+        } catch (e2) {
+            afficherStatus("❌ Impossible de copier automatiquement. Sélectionnez le texte et copiez-le manuellement.", "error");
+        }
+    }
+}
+
+function insererDansChampFrais() {
+    const texteCalcule = document.getElementById("resultatFraisCalcules").value;
+    if (!texteCalcule) return;
+
+    document.getElementById("texteFrais").value = "Filiale\tFrais de gestion\n" + texteCalcule;
+    afficherStatus("➡️ Résultat inséré dans le champ Frais de Gestion (Section 2). Vous pouvez maintenant l'envoyer.", "success");
+    document.getElementById("texteFrais").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+// --- SECTION 4 : CLASSEMENT PAR RÉSULTAT D'EXPLOITATION ---
+async function genererEtEnvoyerClassement() {
+    const selectWebhookClassement = document.getElementById("selectWebhookClassement");
+    const codeAcces = document.getElementById("codeAcces").value.trim();
+    const texte = document.getElementById("texteResultatsFiliales").value.trim();
+    const btn = document.getElementById("btnEnvoyerClassement");
+
+    let webhookUrl = "";
+    if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces] && selectWebhookClassement.value) {
+        webhookUrl = selectWebhookClassement.value;
+    } else if (codeAcces && DICTIONNAIRE_WEBHOOKS[codeAcces]) {
+        afficherStatus("❌ Aucun salon contenant \"classement\" dans son nom n'est configuré pour ce code d'accès.", "error");
+        return;
+    } else {
+        afficherStatus("❌ Veuillez saisir un code d'accès valide.", "error");
+        return;
+    }
+
+    if (!texte) {
+        afficherStatus("❌ Veuillez coller le tableau des résultats dans la Section 3 ci-dessus.", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    afficherStatus("⏳ Génération du classement...", "");
+
+    try {
+        const donnees = analyserTableauResultats(texte);
+        if (donnees.length === 0) {
+            afficherStatus("❌ Aucune ligne valide détectée dans le tableau collé.", "error");
+            btn.disabled = false;
+            return;
+        }
+
+        const classees = donnees.slice().sort((a, b) => {
+            if (a.resultatExploitation > b.resultatExploitation) return -1;
+            if (a.resultatExploitation < b.resultatExploitation) return 1;
+            return 0;
+        });
+
+        const medailles = ["🥇", "🥈", "🥉"];
+        let messageActuel = "🏆 **Classement — Résultat d'exploitation**\n\n";
+        const messagesAEnvoyer = [];
+
+        classees.forEach((d, index) => {
+            const rangAffiche = index < 3 ? medailles[index] : `${index + 1}.`;
+            const estNegatif = d.resultatExploitation < 0n;
+            const valeurAbsolue = estNegatif ? -d.resultatExploitation : d.resultatExploitation;
+            const montantFormate = valeurAbsolue === 0n
+                ? "0 EØ"
+                : `${formaterGrandNombre(valeurAbsolue.toString())}Ø`;
+            const signe = estNegatif ? "-" : "";
+            const ligneFormat = `${rangAffiche} **${d.filiale}**\n📊 Re : **${signe}${montantFormate}**\n\n`;
+
+            if ((messageActuel + ligneFormat).length > 1900) {
+                messagesAEnvoyer.push(messageActuel);
+                messageActuel = "🔄 **Suite du classement :**\n\n" + ligneFormat;
+            } else {
+                messageActuel += ligneFormat;
+            }
+        });
+
+        if (messageActuel.trim()) messagesAEnvoyer.push(messageActuel);
+
+        await envoyerSurDiscord(webhookUrl, messagesAEnvoyer, "Classement des Filiales");
+        afficherStatus(`✅ Classement envoyé avec succès ! (${donnees.length} filiale(s))`, "success");
+    } catch (e) {
+        afficherStatus(`❌ Erreur Classement : ${e.message}`, "error");
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 // Fonction globale d'envoi
