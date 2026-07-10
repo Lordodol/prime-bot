@@ -41,12 +41,28 @@
             "url": "https://discord.com/api/webhooks/1518563990316515519/jKKxKGacgy0vuHsZ2wrdVzJbHMwbcy_eMD489TXvXnIv0Az2ku8OXLmpxyl5PRePTfdU"
         },
         {
+            "nom": "Prime Zephyros",
+            "url": "https://discord.com/api/webhooks/1525060512256102491/prDChlsTiN6mXnwJtyg1sUVTCX5ilsYgQCv1lZFUaDr9sO0uHK8MaC0rRIF7nUWwmBIA"
+        },
+        {
+            "nom": "FDG Zephyros",
+            "url": "https://discord.com/api/webhooks/1525060512256102491/prDChlsTiN6mXnwJtyg1sUVTCX5ilsYgQCv1lZFUaDr9sO0uHK8MaC0rRIF7nUWwmBIA"
+        },
+        {
             "nom": "FDG capital",
             "url": "https://discord.com/api/webhooks/1524497137872801833/8IcbDYv8spI9YUX-AzSq8sNLKQjx74ijhM5n60e8MwH1lqAx40RjpSBoRme74-UwPjS-"
         },
         {
             "nom": "classement capital",
             "url": "https://discord.com/api/webhooks/1524709112796155985/s0laVl5-Gxb-Afo49aQVrD7GgUK6dbZLtwo_6ztSWuY7Yk-a4s-4KkmRmsUKUgnPMEr3"
+        },
+        {
+            "nom": "classement Zephyros filiale",
+            "url": "https://discord.com/api/webhooks/1525059643469074513/2_GWKgTdgLwuMm65l15q_j0TsYwtzgocpf_gp77x7rZ9muw3nme2H6ZLr2-U2ADfCfO5"
+        },
+        {
+            "nom": "classement Zephyros filiale-evo",
+            "url": "https://discord.com/api/webhooks/1525059967042715762/9-9acco4sG1wXsrejJMEWh72gpuC7zSAAeOIrgCdWBe7G94RDSKTrVkUp4ztUmzSk7Fm"
         },
         {
             "nom": "classement capital total",
