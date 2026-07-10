@@ -378,10 +378,11 @@
         <h2>🧮 Calculateur de Frais & Classement</h2>
         
         <div class="form-group">
-            <label for="typeClassement">🎯 Type de données injectées / Classement souhaité :</label>
+            <label for="typeClassement" onchange="ajusterDescriptionChamps()">🎯 Type de données injectées / Classement souhaité :</label>
             <select id="typeClassement" onchange="ajusterDescriptionChamps()">
                 <option value="exploitation">📊 Tableau des Résultats (Classement par Résultat d'exploitation + Calcul Frais)</option>
                 <option value="capitaux">💎 Tableau d'Apport (Classement par Capitaux Propres)</option>
+                <option value="plusvalue">📈 Tableau d'Apport (Classement par Plus-value %)</option>
             </select>
         </div>
 
@@ -438,7 +439,7 @@ function ajusterDescriptionChamps() {
     const sectionPourcent = document.getElementById("sectionCalculPourcentage");
     const zoneResultat = document.getElementById("zoneResultatCalcul");
 
-    if (type === "capitaux") {
+    if (type === "capitaux" || type === "plusvalue") {
         label.innerText = "Tableau des Apports & Capitaux propres :";
         desc.innerText = "Doit contenir l'ordre : Filiale, Apport, Capitaux propres, Latence, Plus-value.";
         inputTexte.placeholder = "Filiale    Apport    Capitaux propres    Latence    Plus-value...";
@@ -840,13 +841,17 @@ async function genererEtEnvoyerClassement() {
         let suffixeUnite = "";
 
         if (typeClassement === "capitaux") {
-            donnees = analyserTableauCapitaux(texte);
+            donnees = analyserTableauCapitaux(texte, "capitaux");
             titreEmbed = "🏆 Classement Général — Capitaux Propres";
             suffixeUnite = " 💎";
+        } else if (typeClassement === "plusvalue") {
+            donnees = analyserTableauCapitaux(texte, "plusvalue");
+            titreEmbed = "🏆 Classement Général — Plus-value (%)";
+            suffixeUnite = "%";
         } else {
             donnees = analyserTableauResultats(texte);
             titreEmbed = "🏆 Classement Général — Résultat d'exploitation";
-            suffixeUnite = "Ø";
+            suffixeUnite = " Ø";
         }
 
         if (donnees.length === 0) {
@@ -866,7 +871,12 @@ async function genererEtEnvoyerClassement() {
             const rangAffiche = index < 3 ? medailles[index] : `🔹 ${index + 1}.`;
             const estNegatif = d.valeurCible < 0n;
             const valeurAbsolue = estNegatif ? -d.valeurCible : d.valeurCible;
-            const montantFormate = valeurAbsolue === 0n ? `0${suffixeUnite}` : `${formaterGrandNombre(valeurAbsolue.toString())}${suffixeUnite}`;
+            
+            // Format spécifique si c'est de la plus-value brute (pas de conversion d'unités de type M, G...)
+            const montantFormate = typeClassement === "plusvalue" 
+                ? valeurAbsolue.toString() + suffixeUnite 
+                : (valeurAbsolue === 0n ? `0${suffixeUnite}` : `${formaterGrandNombre(valeurAbsolue.toString())}${suffixeUnite}`);
+                
             const signe = estNegatif ? "-" : "";
 
             currentFields.push({
@@ -943,8 +953,8 @@ function analyserTableauResultats(texte) {
     return resultats;
 }
 
-// Analyseur V2 - Tableau des apports (Capitaux Propres)
-function analyserTableauCapitaux(texte) {
+// Analyseur V2 - Tableau des apports (Capitaux Propres & Plus-value)
+function analyserTableauCapitaux(texte, mode) {
     const lignes = texte.split("\n");
     const resultats = [];
 
@@ -966,10 +976,10 @@ function analyserTableauCapitaux(texte) {
         resultats.push({
             filiale: filiale,
             apport: convertirEnBigIntSigne(montants[0]),
-            capitauxPropres: convertirEnBigIntSigne(montants[1]), // Index 1 de la fin numérique
+            capitauxPropres: convertirEnBigIntSigne(montants[1]), 
             latence: convertirEnBigIntSigne(montants[2]),
             plusValue: convertirEnBigIntSigne(montants[3]),
-            valeurCible: convertirEnBigIntSigne(montants[1]) // Tri ciblé sur les Capitaux propres
+            valeurCible: mode === "plusvalue" ? convertirEnBigIntSigne(montants[3]) : convertirEnBigIntSigne(montants[1])
         });
     }
     return resultats;
